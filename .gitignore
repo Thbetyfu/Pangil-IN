@@ -59,3 +59,8 @@ Thumbs.db
 *.rar
 *.tar.gz
 Tahap1_ Pengumpulan tanggal 27 April 2026-20260628T151719Z-3-001.zip
+
+# Python
+__pycache__/
+*.pyc
+

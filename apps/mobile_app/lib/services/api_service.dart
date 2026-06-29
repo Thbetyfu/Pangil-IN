@@ -14,8 +14,10 @@ class ApiService {
   String? _userId;
 
   // Stream to broadcast community proximity alerts
-  final StreamController<Map<String, dynamic>> _communityAlertController = StreamController<Map<String, dynamic>>.broadcast();
-  Stream<Map<String, dynamic>> get communityAlerts => _communityAlertController.stream;
+  final StreamController<Map<String, dynamic>> _communityAlertController =
+      StreamController<Map<String, dynamic>>.broadcast();
+  Stream<Map<String, dynamic>> get communityAlerts =>
+      _communityAlertController.stream;
 
   ApiService({required this.database});
 
@@ -24,7 +26,11 @@ class ApiService {
 
   // Auth: Register
   Future<Map<String, dynamic>> register(
-      String email, String password, String name, String phone) async {
+    String email,
+    String password,
+    String name,
+    String phone,
+  ) async {
     final response = await http.post(
       Uri.parse('$baseUrl/api/auth/register'),
       headers: {'Content-Type': 'application/json'},
@@ -41,28 +47,19 @@ class ApiService {
 
   // Auth: Login
   Future<Map<String, dynamic>> login(String email, String password) async {
+    String targetEmail = email;
+    String targetPassword = password;
+
+    // Auto-map mock emails to the real seeded database citizen account for integration
     if (email == 'citizen@panggilin.com' || email == 'budi@panggilin.com') {
-      _token = 'dummy_dev_token';
-      _userId = 'dummy_user_id';
-      return {
-        'status': 'success',
-        'data': {
-          'token': 'dummy_dev_token',
-          'user': {
-            'id': 'dummy_user_id',
-            'name': 'Budi Santoso',
-            'email': email,
-            'phone': '081234567890',
-            'role': 'CITIZEN'
-          }
-        }
-      };
+      targetEmail = 'citizen@panggil.in';
+      targetPassword = 'citizen123';
     }
 
     final response = await http.post(
       Uri.parse('$baseUrl/api/auth/login'),
       headers: {'Content-Type': 'application/json'},
-      body: jsonEncode({'email': email, 'password': password}),
+      body: jsonEncode({'email': targetEmail, 'password': targetPassword}),
     );
     final data = jsonDecode(response.body);
     if (response.statusCode == 200 && data['status'] == 'success') {
@@ -73,18 +70,30 @@ class ApiService {
   }
 
   // SOS: Trigger Report
-  Future<Map<String, dynamic>> triggerSos(double latitude, double longitude, {String? description, String? audioUrl}) async {
+  Future<Map<String, dynamic>> triggerSos(
+    double latitude,
+    double longitude, {
+    String? description,
+    String? audioUrl,
+  }) async {
     if (_token == null) {
       print('Auto-authenticating with mock citizen account...');
       try {
-        final loginRes = await login('citizen@panggilin.com', 'password123');
+        final loginRes = await login('citizen@panggil.in', 'citizen123');
         if (loginRes['status'] != 'success') {
           // Try to register first if login fails
-          await register('citizen@panggilin.com', 'password123', 'Budi Santoso', '081234567890');
-          await login('citizen@panggilin.com', 'password123');
+          await register(
+            'citizen@panggil.in',
+            'citizen123',
+            'Rian Wijaya',
+            '089876543210',
+          );
+          await login('citizen@panggil.in', 'citizen123');
         }
       } catch (e) {
-        print('Auto-authentication failed, using dummy token for offline simulation: $e');
+        print(
+          'Auto-authentication failed, using dummy token for offline simulation: $e',
+        );
         _token = 'dummy_dev_token';
         _userId = 'dummy-citizen-id';
       }
@@ -110,21 +119,21 @@ class ApiService {
   // Real-time: Initialize Socket.io Connection
   void initSocket() {
     if (_token == null || _userId == null) return;
-    
-    _socket = io.io(baseUrl, io.OptionBuilder()
-      .setTransports(['websocket'])
-      .disableAutoConnect()
-      .build());
+
+    _socket = io.io(
+      baseUrl,
+      io.OptionBuilder()
+          .setTransports(['websocket'])
+          .disableAutoConnect()
+          .build(),
+    );
 
     _socket!.connect();
 
     _socket!.onConnect((_) {
       print('Connected to Socket.io server');
       // Register with role and user ID
-      _socket!.emit('register', {
-        'userId': _userId,
-        'role': 'CITIZEN',
-      });
+      _socket!.emit('register', {'userId': _userId, 'role': 'CITIZEN'});
     });
 
     _socket!.on('community_alert', (data) {
@@ -193,14 +202,17 @@ class ApiService {
             'is_spoofed': isSpoofed,
             'anti_spoofing_score': antiSpoofingScore,
             'created_at': DateTime.now().toIso8601String(),
-          }
-        }
+          },
+        },
       };
     }
   }
 
   // Peta: Get reports within 2km radius
-  Future<Map<String, dynamic>> getNearbyReports(double latitude, double longitude) async {
+  Future<Map<String, dynamic>> getNearbyReports(
+    double latitude,
+    double longitude,
+  ) async {
     if (_token == null) {
       _token = 'dummy_dev_token';
     }
@@ -217,16 +229,18 @@ class ApiService {
       if (data['status'] == 'success') {
         final List<dynamic> reportsList = data['data']['reports'] ?? [];
         for (final r in reportsList) {
-          await database.insertReport(CachedReport(
-            id: r['id'].toString(),
-            type: r['type'].toString(),
-            latitude: double.parse(r['latitude'].toString()),
-            longitude: double.parse(r['longitude'].toString()),
-            description: r['description'] ?? '',
-            status: r['status'] ?? 'PENDING',
-            urgency: r['urgency'] ?? 'MEDIUM',
-            createdAt: r['created_at'] ?? DateTime.now().toIso8601String(),
-          ));
+          await database.insertReport(
+            CachedReport(
+              id: r['id'].toString(),
+              type: r['type'].toString(),
+              latitude: double.parse(r['latitude'].toString()),
+              longitude: double.parse(r['longitude'].toString()),
+              description: r['description'] ?? '',
+              status: r['status'] ?? 'PENDING',
+              urgency: r['urgency'] ?? 'MEDIUM',
+              createdAt: r['created_at'] ?? DateTime.now().toIso8601String(),
+            ),
+          );
         }
       }
       return data;
@@ -235,20 +249,24 @@ class ApiService {
       try {
         final cachedList = await database.getAllReports();
         if (cachedList.isNotEmpty) {
-          final reportsJson = cachedList.map((r) => {
-            'id': r.id,
-            'type': r.type,
-            'latitude': r.latitude,
-            'longitude': r.longitude,
-            'description': r.description,
-            'status': r.status,
-            'urgency': r.urgency,
-            'created_at': r.createdAt,
-          }).toList();
+          final reportsJson = cachedList
+              .map(
+                (r) => {
+                  'id': r.id,
+                  'type': r.type,
+                  'latitude': r.latitude,
+                  'longitude': r.longitude,
+                  'description': r.description,
+                  'status': r.status,
+                  'urgency': r.urgency,
+                  'created_at': r.createdAt,
+                },
+              )
+              .toList();
           return {
             'status': 'success',
             'results': reportsJson.length,
-            'data': {'reports': reportsJson}
+            'data': {'reports': reportsJson},
           };
         }
       } catch (dbError) {
@@ -266,10 +284,13 @@ class ApiService {
               'type': 'VISUAL_REPORT',
               'latitude': -6.8915,
               'longitude': 107.6161, // Simpang Dago
-              'description': 'Percobaan pembegalan motor, pelaku 2 orang menggunakan motor matic hitam.',
+              'description':
+                  'Percobaan pembegalan motor, pelaku 2 orang menggunakan motor matic hitam.',
               'status': 'PENDING',
               'urgency': 'MEDIUM',
-              'created_at': DateTime.now().subtract(const Duration(minutes: 15)).toIso8601String(),
+              'created_at': DateTime.now()
+                  .subtract(const Duration(minutes: 15))
+                  .toIso8601String(),
             },
             {
               'id': 'mock-rep-2',
@@ -279,20 +300,25 @@ class ApiService {
               'description': 'Laporan SOS Darurat Warga terdeteksi begal!',
               'status': 'VALIDATED',
               'urgency': 'HIGH',
-              'created_at': DateTime.now().subtract(const Duration(minutes: 5)).toIso8601String(),
+              'created_at': DateTime.now()
+                  .subtract(const Duration(minutes: 5))
+                  .toIso8601String(),
             },
             {
               'id': 'mock-rep-3',
               'type': 'VISUAL_REPORT',
               'latitude': -6.8902,
               'longitude': 107.6105, // Cihampelas
-              'description': 'Kerumunan geng motor membawa senjata tajam melintas cepat.',
+              'description':
+                  'Kerumunan geng motor membawa senjata tajam melintas cepat.',
               'status': 'ON_PROCESS',
               'urgency': 'MEDIUM',
-              'created_at': DateTime.now().subtract(const Duration(minutes: 30)).toIso8601String(),
-            }
-          ]
-        }
+              'created_at': DateTime.now()
+                  .subtract(const Duration(minutes: 30))
+                  .toIso8601String(),
+            },
+          ],
+        },
       };
     }
   }
@@ -328,7 +354,8 @@ class ApiService {
   }
 
   // Speech event stream controller for trauma-responsive accessibility (Stealth triggers)
-  final StreamController<String> _speechController = StreamController<String>.broadcast();
+  final StreamController<String> _speechController =
+      StreamController<String>.broadcast();
   Stream<String> getSpeechEvents() => _speechController.stream;
 
   void simulateSpeechInput(String phrase) {
@@ -378,14 +405,16 @@ class ApiService {
           final List<dynamic> points = data['data']['points'];
           await database.clearAllHeatmaps();
           for (final p in points) {
-            await database.insertHeatmap(BegalHeatmap(
-              id: p['id'].toString(),
-              latitude: (p['latitude'] as num).toDouble(),
-              longitude: (p['longitude'] as num).toDouble(),
-              intensity: (p['intensity'] as num).toDouble(),
-              areaName: p['areaName'].toString(),
-              updatedAt: DateTime.now().toIso8601String(),
-            ));
+            await database.insertHeatmap(
+              BegalHeatmap(
+                id: p['id'].toString(),
+                latitude: (p['latitude'] as num).toDouble(),
+                longitude: (p['longitude'] as num).toDouble(),
+                intensity: (p['intensity'] as num).toDouble(),
+                areaName: p['areaName'].toString(),
+                updatedAt: DateTime.now().toIso8601String(),
+              ),
+            );
           }
           print('[Offline Cache] Successfully synchronized begal heatmap data');
         }

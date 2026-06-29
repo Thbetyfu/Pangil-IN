@@ -2,6 +2,7 @@ import express from 'express';
 import cors from 'cors';
 import { createServer } from 'http';
 import dotenv from 'dotenv';
+import path from 'path';
 
 // Load environment variables
 dotenv.config();
@@ -21,6 +22,7 @@ const port = process.env.PORT || 3001;
 // Middlewares
 app.use(cors());
 app.use(express.json());
+app.use('/static', express.static(path.join(__dirname, '../public')));
 
 // Routes
 app.use('/api/auth', authRoutes);

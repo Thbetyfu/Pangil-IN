@@ -14,19 +14,22 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
   final List<Map<String, String>> _onboardingData = [
     {
       'title': 'Zero-Click SOS Trigger',
-      'description': 'Memicu bantuan kepolisian instan tanpa buka HP melalui tombol fisik, sensor guncangan, atau asisten suara samaran.',
+      'description':
+          'Memicu bantuan kepolisian instan tanpa buka HP melalui tombol fisik, sensor guncangan, atau asisten suara samaran.',
       'icon': 'touch_app_rounded',
     },
     {
       'title': 'Penyamaran Anti-Maling',
-      'description': 'Fitur Fake Shutdown mematikan layar HP Anda saat dirampas pelaku. Pelaku mengira HP mati, namun GPS tetap aktif melacak.',
+      'description':
+          'Fitur Fake Shutdown mematikan layar HP Anda saat dirampas pelaku. Pelaku mengira HP mati, namun GPS tetap aktif melacak.',
       'icon': 'security_rounded',
     },
     {
       'title': 'Community Proximity Alert',
-      'description': 'Peringatan otomatis menyebar ke mitra ojol & warga dalam radius 500 meter untuk deterrent massal sebelum polisi tiba.',
+      'description':
+          'Peringatan otomatis menyebar ke mitra ojol & warga dalam radius 500 meter untuk deterrent massal sebelum polisi tiba.',
       'icon': 'groups_rounded',
-    }
+    },
   ];
 
   IconData _getIcon(String name) {
@@ -51,10 +54,7 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
           gradient: LinearGradient(
             begin: Alignment.topLeft,
             end: Alignment.bottomRight,
-            colors: [
-              Color(0xFF0F1219),
-              Color(0xFF1E1F29),
-            ],
+            colors: [Color(0xFF0F1219), Color(0xFF1E1F29)],
           ),
         ),
         child: SafeArea(
@@ -111,7 +111,9 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
                               ),
                               boxShadow: [
                                 BoxShadow(
-                                  color: const Color(0xFFFF1744).withOpacity(0.15),
+                                  color: const Color(
+                                    0xFFFF1744,
+                                  ).withOpacity(0.15),
                                   blurRadius: 30,
                                   spreadRadius: 2,
                                 ),
@@ -179,7 +181,10 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
                       style: ElevatedButton.styleFrom(
                         backgroundColor: const Color(0xFFFF1744),
                         foregroundColor: Colors.white,
-                        padding: const EdgeInsets.symmetric(horizontal: 28, vertical: 14),
+                        padding: const EdgeInsets.symmetric(
+                          horizontal: 28,
+                          vertical: 14,
+                        ),
                         shape: RoundedRectangleBorder(
                           borderRadius: BorderRadius.circular(30),
                         ),
@@ -197,7 +202,9 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
                         }
                       },
                       child: Text(
-                        _currentIndex == _onboardingData.length - 1 ? 'MULAI' : 'LANJUT',
+                        _currentIndex == _onboardingData.length - 1
+                            ? 'MULAI'
+                            : 'LANJUT',
                         style: const TextStyle(
                           fontWeight: FontWeight.w900,
                           fontSize: 12,

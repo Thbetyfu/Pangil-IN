@@ -5,11 +5,7 @@ class PulsingSosButton extends StatefulWidget {
   final VoidCallback onTap;
   final double size;
 
-  const PulsingSosButton({
-    super.key,
-    required this.onTap,
-    this.size = 180.0,
-  });
+  const PulsingSosButton({super.key, required this.onTap, this.size = 180.0});
 
   @override
   State<PulsingSosButton> createState() => _PulsingSosButtonState();
@@ -70,8 +66,10 @@ class _PulsingSosButtonState extends State<PulsingSosButton>
             AnimatedBuilder(
               animation: _animationController,
               builder: (context, child) {
-                final scale = 1.0 + ((_animationController.value + 0.5) % 1.0 * 0.25);
-                final opacity = 0.4 * (1.0 - ((_animationController.value + 0.5) % 1.0));
+                final scale =
+                    1.0 + ((_animationController.value + 0.5) % 1.0 * 0.25);
+                final opacity =
+                    0.4 * (1.0 - ((_animationController.value + 0.5) % 1.0));
                 return Transform.scale(
                   scale: scale,
                   child: Container(
@@ -121,26 +119,26 @@ class _PulsingSosButtonState extends State<PulsingSosButton>
                     Text(
                       'SOS BEGAL!',
                       style: Theme.of(context).textTheme.titleLarge?.copyWith(
-                            color: Colors.white,
-                            fontWeight: FontWeight.w900,
-                            letterSpacing: 1.5,
-                            shadows: [
-                              const Shadow(
-                                blurRadius: 10.0,
-                                color: Colors.black45,
-                                offset: Offset(0, 2),
-                              ),
-                            ],
+                        color: Colors.white,
+                        fontWeight: FontWeight.w900,
+                        letterSpacing: 1.5,
+                        shadows: [
+                          const Shadow(
+                            blurRadius: 10.0,
+                            color: Colors.black45,
+                            offset: Offset(0, 2),
                           ),
+                        ],
+                      ),
                     ),
                     const SizedBox(height: 4),
                     Text(
                       'TEKAN DARURAT',
                       style: Theme.of(context).textTheme.labelSmall?.copyWith(
-                            color: Colors.white70,
-                            fontWeight: FontWeight.bold,
-                            letterSpacing: 1.0,
-                          ),
+                        color: Colors.white70,
+                        fontWeight: FontWeight.bold,
+                        letterSpacing: 1.0,
+                      ),
                     ),
                   ],
                 ),

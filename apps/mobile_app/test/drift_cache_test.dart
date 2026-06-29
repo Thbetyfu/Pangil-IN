@@ -10,22 +10,26 @@ class MockApiServiceForSync extends ApiService {
   Future<void> syncHeatmap() async {
     // Simulate population of database with mock backend response points
     await database.clearAllHeatmaps();
-    await database.insertHeatmap(const BegalHeatmap(
-      id: 'h-sync-1',
-      latitude: -6.8915,
-      longitude: 107.6161,
-      intensity: 4.5,
-      areaName: 'Simpang Dago',
-      updatedAt: '2026-06-29T08:00:00Z',
-    ));
-    await database.insertHeatmap(const BegalHeatmap(
-      id: 'h-sync-2',
-      latitude: -6.8975,
-      longitude: 107.6186,
-      intensity: 3.2,
-      areaName: 'Dipatiukur',
-      updatedAt: '2026-06-29T08:00:00Z',
-    ));
+    await database.insertHeatmap(
+      const BegalHeatmap(
+        id: 'h-sync-1',
+        latitude: -6.8915,
+        longitude: 107.6161,
+        intensity: 4.5,
+        areaName: 'Simpang Dago',
+        updatedAt: '2026-06-29T08:00:00Z',
+      ),
+    );
+    await database.insertHeatmap(
+      const BegalHeatmap(
+        id: 'h-sync-2',
+        latitude: -6.8975,
+        longitude: 107.6186,
+        intensity: 3.2,
+        areaName: 'Dipatiukur',
+        updatedAt: '2026-06-29T08:00:00Z',
+      ),
+    );
   }
 }
 
@@ -76,18 +80,21 @@ void main() {
     expect(list, isEmpty);
   });
 
-  test('ApiService syncHeatmap successfully synchronizes points into local SQLite database', () async {
-    // Trigger sync
-    await apiService.syncHeatmap();
+  test(
+    'ApiService syncHeatmap successfully synchronizes points into local SQLite database',
+    () async {
+      // Trigger sync
+      await apiService.syncHeatmap();
 
-    // Verify database was populated
-    final list = await database.getAllHeatmaps();
-    expect(list.length, equals(2));
-    
-    expect(list[0].id, equals('h-sync-1'));
-    expect(list[0].areaName, equals('Simpang Dago'));
-    
-    expect(list[1].id, equals('h-sync-2'));
-    expect(list[1].areaName, equals('Dipatiukur'));
-  });
+      // Verify database was populated
+      final list = await database.getAllHeatmaps();
+      expect(list.length, equals(2));
+
+      expect(list[0].id, equals('h-sync-1'));
+      expect(list[0].areaName, equals('Simpang Dago'));
+
+      expect(list[1].id, equals('h-sync-2'));
+      expect(list[1].areaName, equals('Dipatiukur'));
+    },
+  );
 }

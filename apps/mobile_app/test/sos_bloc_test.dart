@@ -23,10 +23,8 @@ class MockApiService extends ApiService {
     return {
       'status': 'success',
       'data': {
-        'report': {
-          'id': 'mock-report-id-12345',
-        }
-      }
+        'report': {'id': 'mock-report-id-12345'},
+      },
     };
   }
 
@@ -50,7 +48,7 @@ class MockApiService extends ApiService {
         headingAccuracy: 0.0,
         speed: 0.0,
         speedAccuracy: 0.0,
-      )
+      ),
     ]);
   }
 
@@ -70,7 +68,8 @@ class MockApiService extends ApiService {
     );
   }
 
-  final StreamController<UserAccelerometerEvent> accelerometerController = StreamController<UserAccelerometerEvent>.broadcast();
+  final StreamController<UserAccelerometerEvent> accelerometerController =
+      StreamController<UserAccelerometerEvent>.broadcast();
 
   @override
   Stream<UserAccelerometerEvent> getAccelerometerEvents() {
@@ -107,23 +106,23 @@ void main() {
     sosBloc.add(ToggleRidingModeEvent(enable: true));
     expect(
       sosBloc.stream,
-      emitsInOrder([
-        predicate<SosState>((state) => state.ridingMode == true),
-      ]),
+      emitsInOrder([predicate<SosState>((state) => state.ridingMode == true)]),
     );
   });
 
   test('TriggerSosConfirmationEvent transitions to confirming status', () {
     sosBloc.add(TriggerSosConfirmationEvent(latitude: -6.9, longitude: 107.6));
-    
+
     expect(
       sosBloc.stream,
       emitsThrough(
-        predicate<SosState>((state) =>
-            state.status == SosStatus.confirming &&
-            state.latitude == -6.9 &&
-            state.longitude == 107.6 &&
-            state.countdown == 60),
+        predicate<SosState>(
+          (state) =>
+              state.status == SosStatus.confirming &&
+              state.latitude == -6.9 &&
+              state.longitude == 107.6 &&
+              state.countdown == 60,
+        ),
       ),
     );
   });
@@ -135,9 +134,11 @@ void main() {
     expect(
       sosBloc.stream,
       emitsThrough(
-        predicate<SosState>((state) =>
-            state.status == SosStatus.active &&
-            state.reportId == 'mock-report-id-12345'),
+        predicate<SosState>(
+          (state) =>
+              state.status == SosStatus.active &&
+              state.reportId == 'mock-report-id-12345',
+        ),
       ),
     );
   });
@@ -149,48 +150,79 @@ void main() {
     expect(
       sosBloc.stream,
       emitsThrough(
-        predicate<SosState>((state) =>
-            state.status == SosStatus.idle &&
-            state.latitude == null &&
-            state.longitude == null),
+        predicate<SosState>(
+          (state) =>
+              state.status == SosStatus.idle &&
+              state.latitude == null &&
+              state.longitude == null,
+        ),
       ),
     );
   });
 
-  test('TriggerSosConfirmationEvent is blocked when ridingMode is true', () async {
-    sosBloc.add(ToggleRidingModeEvent(enable: true));
-    
-    // Allow queue to process ToggleRidingModeEvent first
-    await pumpEventQueue();
-    
-    sosBloc.add(TriggerSosConfirmationEvent(latitude: -6.9, longitude: 107.6));
-    
-    // State should not transition to confirming
-    expect(sosBloc.state.status, SosStatus.idle);
-  });
+  test(
+    'TriggerSosConfirmationEvent is blocked when ridingMode is true',
+    () async {
+      sosBloc.add(ToggleRidingModeEvent(enable: true));
 
-  test('ToggleFakeShutdownEvent enables fakeShutdown and triggers SOS in background', () async {
-    sosBloc.add(ToggleFakeShutdownEvent(enable: true));
-    
-    expect(
-      sosBloc.stream,
-      emitsThrough(
-        predicate<SosState>((state) =>
-            state.fakeShutdown == true &&
-            state.status == SosStatus.active &&
-            state.reportId == 'mock-report-id-12345'),
-      ),
-    );
-  });
+      // Allow queue to process ToggleRidingModeEvent first
+      await pumpEventQueue();
+
+      sosBloc.add(
+        TriggerSosConfirmationEvent(latitude: -6.9, longitude: 107.6),
+      );
+
+      // State should not transition to confirming
+      expect(sosBloc.state.status, SosStatus.idle);
+    },
+  );
+
+  test(
+    'ToggleFakeShutdownEvent enables fakeShutdown and triggers SOS in background',
+    () async {
+      sosBloc.add(ToggleFakeShutdownEvent(enable: true));
+
+      expect(
+        sosBloc.stream,
+        emitsThrough(
+          predicate<SosState>(
+            (state) =>
+                state.fakeShutdown == true &&
+                state.status == SosStatus.active &&
+                state.reportId == 'mock-report-id-12345',
+          ),
+        ),
+      );
+    },
+  );
+
+  test(
+    'ToggleFakeShutdownEvent(enable: false) disables fakeShutdown and cancels active SOS',
+    () async {
+      sosBloc.add(ToggleFakeShutdownEvent(enable: true));
+      await pumpEventQueue();
+
+      expect(sosBloc.state.fakeShutdown, isTrue);
+      expect(sosBloc.state.status, SosStatus.active);
+
+      sosBloc.add(ToggleFakeShutdownEvent(enable: false));
+      await pumpEventQueue();
+
+      expect(sosBloc.state.fakeShutdown, isFalse);
+      expect(sosBloc.state.status, SosStatus.idle);
+    },
+  );
 
   test('Countdown SOS auto-cancels after 60 seconds (F-01 Rule 5)', () {
     fakeAsync((async) {
       final testBloc = SosBloc(apiService: mockApiService);
-      testBloc.add(TriggerSosConfirmationEvent(latitude: -6.90344, longitude: 107.61872));
-      
+      testBloc.add(
+        TriggerSosConfirmationEvent(latitude: -6.90344, longitude: 107.61872),
+      );
+
       // Allow event loop to process TriggerSosConfirmationEvent
       async.flushMicrotasks();
-      
+
       expect(testBloc.state.status, SosStatus.confirming);
       expect(testBloc.state.countdown, equals(60));
 
@@ -206,41 +238,56 @@ void main() {
     });
   });
 
-  test('High-G shock trigger via accelerometer opens SOS overlay in background (F-02)', () async {
-    // Publish a mock high acceleration event (40.0 m/s2, which exceeds 30.0 threshold)
-    mockApiService.accelerometerController.add(UserAccelerometerEvent(0.0, 40.0, 0.0, DateTime.now()));
+  test(
+    'High-G shock trigger via accelerometer opens SOS overlay in background (F-02)',
+    () async {
+      // Publish a mock high acceleration event (40.0 m/s2, which exceeds 30.0 threshold)
+      mockApiService.accelerometerController.add(
+        UserAccelerometerEvent(0.0, 40.0, 0.0, DateTime.now()),
+      );
 
-    // Allow event stream to be processed by SosBloc
-    await pumpEventQueue();
+      // Allow event stream to be processed by SosBloc
+      await pumpEventQueue();
 
-    expect(sosBloc.state.status, SosStatus.confirming);
-    expect(sosBloc.state.latitude, equals(-6.90344));
-    expect(sosBloc.state.longitude, equals(107.61872));
-  });
+      expect(sosBloc.state.status, SosStatus.confirming);
+      expect(sosBloc.state.latitude, equals(-6.90344));
+      expect(sosBloc.state.longitude, equals(107.61872));
+    },
+  );
 
-  test('High-G shock trigger is ignored when ridingMode is active (F-01 Rule 3)', () async {
-    sosBloc.add(ToggleRidingModeEvent(enable: true));
-    await pumpEventQueue();
+  test(
+    'High-G shock trigger is ignored when ridingMode is active (F-01 Rule 3)',
+    () async {
+      sosBloc.add(ToggleRidingModeEvent(enable: true));
+      await pumpEventQueue();
 
-    // Publish a mock high acceleration event
-    mockApiService.accelerometerController.add(UserAccelerometerEvent(0.0, 40.0, 0.0, DateTime.now()));
-    await pumpEventQueue();
+      // Publish a mock high acceleration event
+      mockApiService.accelerometerController.add(
+        UserAccelerometerEvent(0.0, 40.0, 0.0, DateTime.now()),
+      );
+      await pumpEventQueue();
 
-    // Verify it is blocked and status remains idle
-    expect(sosBloc.state.status, SosStatus.idle);
-  });
+      // Verify it is blocked and status remains idle
+      expect(sosBloc.state.status, SosStatus.idle);
+    },
+  );
 
-  test('Stealth voice command triggers SOS immediately bypassing countdown', () async {
-    // Simulate speaking the trigger phrase
-    mockApiService.simulateSpeechInput('Aduh, Bandung dingin banget ya malam ini');
+  test(
+    'Stealth voice command triggers SOS immediately bypassing countdown',
+    () async {
+      // Simulate speaking the trigger phrase
+      mockApiService.simulateSpeechInput(
+        'Aduh, Bandung dingin banget ya malam ini',
+      );
 
-    // Wait for async stream & event loop to complete
-    await pumpEventQueue();
+      // Wait for async stream & event loop to complete
+      await pumpEventQueue();
 
-    // Expect status to immediately become active (bypassing confirming status)
-    expect(sosBloc.state.status, SosStatus.active);
-    expect(sosBloc.state.reportId, equals('mock-report-id-12345'));
-  });
+      // Expect status to immediately become active (bypassing confirming status)
+      expect(sosBloc.state.status, SosStatus.active);
+      expect(sosBloc.state.reportId, equals('mock-report-id-12345'));
+    },
+  );
 
   test('Non-trigger voice phrase is ignored', () async {
     // Simulate speaking a normal phrase
@@ -251,4 +298,42 @@ void main() {
     // Verify status remains idle
     expect(sosBloc.state.status, SosStatus.idle);
   });
+
+  test(
+    'ChangeFakeShutdownMethodEvent updates the state with the new method',
+    () async {
+      expect(
+        sosBloc.state.fakeShutdownMethod,
+        equals('volume_chord'),
+      ); // default
+
+      sosBloc.add(ChangeFakeShutdownMethodEvent(method: 'shake'));
+      await pumpEventQueue();
+
+      expect(sosBloc.state.fakeShutdownMethod, equals('shake'));
+    },
+  );
+
+  test(
+    'Shake gesture exits Fake Shutdown when method is shake and magnitude is high',
+    () async {
+      // 1. Enable Fake Shutdown and set method to shake
+      sosBloc.add(ChangeFakeShutdownMethodEvent(method: 'shake'));
+      sosBloc.add(ToggleFakeShutdownEvent(enable: true));
+      await pumpEventQueue();
+
+      expect(sosBloc.state.fakeShutdown, isTrue);
+      expect(sosBloc.state.status, SosStatus.active);
+
+      // 2. Publish moderate shake event (20.0 m/s2, which exceeds 15.0 exit threshold)
+      mockApiService.accelerometerController.add(
+        UserAccelerometerEvent(0.0, 20.0, 0.0, DateTime.now()),
+      );
+      await pumpEventQueue();
+
+      // 3. Verify Fake Shutdown disabled and SOS cancelled
+      expect(sosBloc.state.fakeShutdown, isFalse);
+      expect(sosBloc.state.status, SosStatus.idle);
+    },
+  );
 }

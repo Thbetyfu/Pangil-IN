@@ -17,7 +17,10 @@ class _LoginScreenState extends State<LoginScreen> {
   final _formKey = GlobalKey<FormState>();
   final _emailController = TextEditingController(text: 'operator@panggil.in');
   final _passwordController = TextEditingController(text: 'operator123');
-  final List<TextEditingController> _otpControllers = List.generate(6, (_) => TextEditingController());
+  final List<TextEditingController> _otpControllers = List.generate(
+    6,
+    (_) => TextEditingController(),
+  );
   final List<FocusNode> _otpFocusNodes = List.generate(6, (_) => FocusNode());
 
   @override
@@ -38,7 +41,7 @@ class _LoginScreenState extends State<LoginScreen> {
     for (var controller in _otpControllers) {
       controller.clear();
     }
-    
+
     showDialog(
       context: context,
       barrierDismissible: false,
@@ -75,7 +78,10 @@ class _LoginScreenState extends State<LoginScreen> {
                   Text(
                     'Masukkan kode 6 digit OTP yang telah dikirim ke nomor/email terdaftar.',
                     textAlign: TextAlign.center,
-                    style: TextStyle(fontSize: 12, color: Colors.white.withOpacity(0.6)),
+                    style: TextStyle(
+                      fontSize: 12,
+                      color: Colors.white.withOpacity(0.6),
+                    ),
                   ),
                 ],
               ),
@@ -91,16 +97,24 @@ class _LoginScreenState extends State<LoginScreen> {
                       textAlign: TextAlign.center,
                       keyboardType: TextInputType.number,
                       maxLength: 1,
-                      style: const TextStyle(fontSize: 20, fontWeight: FontWeight.bold, color: Colors.white),
+                      style: const TextStyle(
+                        fontSize: 20,
+                        fontWeight: FontWeight.bold,
+                        color: Colors.white,
+                      ),
                       decoration: InputDecoration(
                         counterText: '',
                         enabledBorder: OutlineInputBorder(
                           borderRadius: BorderRadius.circular(8),
-                          borderSide: BorderSide(color: Colors.white.withOpacity(0.12)),
+                          borderSide: BorderSide(
+                            color: Colors.white.withOpacity(0.12),
+                          ),
                         ),
                         focusedBorder: OutlineInputBorder(
                           borderRadius: BorderRadius.circular(8),
-                          borderSide: const BorderSide(color: SigapTheme.primaryColor),
+                          borderSide: const BorderSide(
+                            color: SigapTheme.primaryColor,
+                          ),
                         ),
                       ),
                       onChanged: (value) {
@@ -118,21 +132,29 @@ class _LoginScreenState extends State<LoginScreen> {
               actions: [
                 TextButton(
                   onPressed: () => Navigator.pop(dialogContext),
-                  child: const Text('Batal', style: TextStyle(color: SigapTheme.textSecondaryColor)),
+                  child: const Text(
+                    'Batal',
+                    style: TextStyle(color: SigapTheme.textSecondaryColor),
+                  ),
                 ),
                 ElevatedButton(
                   style: ElevatedButton.styleFrom(
                     backgroundColor: SigapTheme.primaryColor,
                     foregroundColor: Colors.white,
-                    shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
-                    padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 12),
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(8),
+                    ),
+                    padding: const EdgeInsets.symmetric(
+                      horizontal: 24,
+                      vertical: 12,
+                    ),
                   ),
                   onPressed: () {
                     // Collect OTP
                     String otp = _otpControllers.map((c) => c.text).join();
                     if (otp.length == 6) {
                       Navigator.pop(dialogContext); // Close dialog
-                      
+
                       // Submit login
                       context.read<DashboardBloc>().add(
                         LoginEvent(
@@ -176,11 +198,7 @@ class _LoginScreenState extends State<LoginScreen> {
             gradient: LinearGradient(
               begin: Alignment.topLeft,
               end: Alignment.bottomRight,
-              colors: [
-                Color(0xFF07090E),
-                Color(0xFF0F131E),
-                Color(0xFF161C2C),
-              ],
+              colors: [Color(0xFF07090E), Color(0xFF0F131E), Color(0xFF161C2C)],
             ),
           ),
           child: Center(
@@ -196,7 +214,10 @@ class _LoginScreenState extends State<LoginScreen> {
                       decoration: BoxDecoration(
                         color: SigapTheme.primaryColor.withOpacity(0.08),
                         shape: BoxShape.circle,
-                        border: Border.all(color: SigapTheme.primaryColor.withOpacity(0.12), width: 2),
+                        border: Border.all(
+                          color: SigapTheme.primaryColor.withOpacity(0.12),
+                          width: 2,
+                        ),
                       ),
                       child: const Icon(
                         Icons.security_rounded,
@@ -223,7 +244,7 @@ class _LoginScreenState extends State<LoginScreen> {
                       ),
                     ),
                     const SizedBox(height: 32),
-                    
+
                     // Glass Card Login Form
                     BlocBuilder<DashboardBloc, DashboardState>(
                       builder: (context, state) {
@@ -246,7 +267,7 @@ class _LoginScreenState extends State<LoginScreen> {
                                   ),
                                 ),
                                 const SizedBox(height: 24),
-                                
+
                                 // Email
                                 Text(
                                   'EMAIL DINAS',
@@ -260,31 +281,46 @@ class _LoginScreenState extends State<LoginScreen> {
                                 const SizedBox(height: 8),
                                 TextFormField(
                                   controller: _emailController,
-                                  style: const TextStyle(color: Colors.white, fontSize: 14),
+                                  style: const TextStyle(
+                                    color: Colors.white,
+                                    fontSize: 14,
+                                  ),
                                   decoration: InputDecoration(
-                                    prefixIcon: Icon(Icons.email_outlined, color: Colors.white.withOpacity(0.4), size: 18),
+                                    prefixIcon: Icon(
+                                      Icons.email_outlined,
+                                      color: Colors.white.withOpacity(0.4),
+                                      size: 18,
+                                    ),
                                     hintText: 'operator@panggil.in',
-                                    hintStyle: TextStyle(color: Colors.white.withOpacity(0.3)),
+                                    hintStyle: TextStyle(
+                                      color: Colors.white.withOpacity(0.3),
+                                    ),
                                     filled: true,
                                     fillColor: Colors.white.withOpacity(0.02),
                                     enabledBorder: OutlineInputBorder(
                                       borderRadius: BorderRadius.circular(10),
-                                      borderSide: BorderSide(color: Colors.white.withOpacity(0.08)),
+                                      borderSide: BorderSide(
+                                        color: Colors.white.withOpacity(0.08),
+                                      ),
                                     ),
                                     focusedBorder: OutlineInputBorder(
                                       borderRadius: BorderRadius.circular(10),
-                                      borderSide: const BorderSide(color: SigapTheme.primaryColor),
+                                      borderSide: const BorderSide(
+                                        color: SigapTheme.primaryColor,
+                                      ),
                                     ),
                                   ),
                                   validator: (value) {
-                                    if (value == null || value.isEmpty || !value.contains('@')) {
+                                    if (value == null ||
+                                        value.isEmpty ||
+                                        !value.contains('@')) {
                                       return 'Email dinas tidak valid';
                                     }
                                     return null;
                                   },
                                 ),
                                 const SizedBox(height: 20),
-                                
+
                                 // Password
                                 Text(
                                   'PASSWORD',
@@ -299,31 +335,46 @@ class _LoginScreenState extends State<LoginScreen> {
                                 TextFormField(
                                   controller: _passwordController,
                                   obscureText: true,
-                                  style: const TextStyle(color: Colors.white, fontSize: 14),
+                                  style: const TextStyle(
+                                    color: Colors.white,
+                                    fontSize: 14,
+                                  ),
                                   decoration: InputDecoration(
-                                    prefixIcon: Icon(Icons.lock_outline, color: Colors.white.withOpacity(0.4), size: 18),
+                                    prefixIcon: Icon(
+                                      Icons.lock_outline,
+                                      color: Colors.white.withOpacity(0.4),
+                                      size: 18,
+                                    ),
                                     hintText: 'Password',
-                                    hintStyle: TextStyle(color: Colors.white.withOpacity(0.3)),
+                                    hintStyle: TextStyle(
+                                      color: Colors.white.withOpacity(0.3),
+                                    ),
                                     filled: true,
                                     fillColor: Colors.white.withOpacity(0.02),
                                     enabledBorder: OutlineInputBorder(
                                       borderRadius: BorderRadius.circular(10),
-                                      borderSide: BorderSide(color: Colors.white.withOpacity(0.08)),
+                                      borderSide: BorderSide(
+                                        color: Colors.white.withOpacity(0.08),
+                                      ),
                                     ),
                                     focusedBorder: OutlineInputBorder(
                                       borderRadius: BorderRadius.circular(10),
-                                      borderSide: const BorderSide(color: SigapTheme.primaryColor),
+                                      borderSide: const BorderSide(
+                                        color: SigapTheme.primaryColor,
+                                      ),
                                     ),
                                   ),
                                   validator: (value) {
-                                    if (value == null || value.isEmpty || value.length < 6) {
+                                    if (value == null ||
+                                        value.isEmpty ||
+                                        value.length < 6) {
                                       return 'Password minimal 6 karakter';
                                     }
                                     return null;
                                   },
                                 ),
                                 const SizedBox(height: 28),
-                                
+
                                 // Login Button
                                 SizedBox(
                                   height: 48,
@@ -338,7 +389,8 @@ class _LoginScreenState extends State<LoginScreen> {
                                     onPressed: state.isAuthenticating
                                         ? null
                                         : () {
-                                            if (_formKey.currentState!.validate()) {
+                                            if (_formKey.currentState!
+                                                .validate()) {
                                               // Launch simulated 2FA Dialog first
                                               _showOtpDialog();
                                             }
@@ -371,8 +423,11 @@ class _LoginScreenState extends State<LoginScreen> {
                     const SizedBox(height: 24),
                     Text(
                       'Hanya personel terdaftar yang berhak mengakses terminal komando.',
-                      style: TextStyle(fontSize: 10, color: Colors.white.withOpacity(0.3)),
-                    )
+                      style: TextStyle(
+                        fontSize: 10,
+                        color: Colors.white.withOpacity(0.3),
+                      ),
+                    ),
                   ],
                 ),
               ),

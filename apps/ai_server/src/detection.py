@@ -11,8 +11,8 @@ def simulate_yolo_detection(cctv_id: str, cctv_name: str) -> Dict[str, Any]:
     has_anomaly = random.random() < 0.15
     
     detections = [
-        {"class": "person", "confidence": round(random.uniform(0.8, 0.98), 2), "bbox": [100, 150, 50, 120]},
-        {"class": "motorcycle", "confidence": round(random.uniform(0.75, 0.95), 2), "bbox": [120, 170, 80, 100]}
+        {"class": "person", "confidence": round(random.uniform(0.91, 0.99), 2), "bbox": [100, 150, 50, 120]},
+        {"class": "motorcycle", "confidence": round(random.uniform(0.90, 0.97), 2), "bbox": [120, 170, 80, 100]}
     ]
     
     if has_anomaly:
@@ -21,13 +21,13 @@ def simulate_yolo_detection(cctv_id: str, cctv_name: str) -> Dict[str, Any]:
         if anomaly_type == "sharp_weapon":
             detections.append({
                 "class": "machete",
-                "confidence": round(random.uniform(0.76, 0.93), 2),
+                "confidence": round(random.uniform(0.92, 0.97), 2),
                 "bbox": [115, 155, 30, 40]
             })
         else:
             detections.append({
                 "class": "aggressive_combat",
-                "confidence": round(random.uniform(0.8, 0.95), 2),
+                "confidence": round(random.uniform(0.91, 0.98), 2),
                 "bbox": [95, 140, 110, 130]
             })
             

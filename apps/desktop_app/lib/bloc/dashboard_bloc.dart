@@ -14,7 +14,8 @@ class DashboardBloc extends Bloc<DashboardEvent, DashboardState> {
     dispatchService.onNewReport = (data) => add(NewReportReceivedEvent(data));
     dispatchService.onGpsUpdate = (data) => add(GpsUpdateReceivedEvent(data));
     dispatchService.onCctvAlert = (data) => add(CctvAlertReceivedEvent(data));
-    dispatchService.onCctvFpsChanged = (data) => add(CctvFpsChangedReceivedEvent(data));
+    dispatchService.onCctvFpsChanged = (data) =>
+        add(CctvFpsChangedReceivedEvent(data));
 
     on<LoginEvent>(_onLogin);
     on<LogoutEvent>(_onLogout);
@@ -22,13 +23,13 @@ class DashboardBloc extends Bloc<DashboardEvent, DashboardState> {
     on<LoadInitialDataEvent>(_onLoadInitialData);
     on<SelectReportEvent>(_onSelectReport);
     on<AssignPatrolUnitEvent>(_onAssignPatrolUnit);
-    
+
     // WebSocket / Real-time events handlers
     on<NewReportReceivedEvent>(_onNewReportReceived);
     on<GpsUpdateReceivedEvent>(_onGpsUpdateReceived);
     on<CctvAlertReceivedEvent>(_onCctvAlertReceived);
     on<CctvFpsChangedReceivedEvent>(_onCctvFpsChangedReceived);
-    
+
     // AI Mock / CCTV trigger events
     on<TriggerMockSosEvent>(_onTriggerMockSos);
     on<UpdateCctvFpsEvent>(_onUpdateCctvFps);
@@ -42,37 +43,47 @@ class DashboardBloc extends Bloc<DashboardEvent, DashboardState> {
       if (res['status'] == 'success') {
         final userData = res['data']['user'];
         final token = res['data']['token'];
-        
+
         if (userData['role'] == 'CITIZEN') {
-          emit(state.copyWith(
-            isAuthenticating: false,
-            authError: 'Akses ditolak: Hanya untuk petugas kepolisian',
-          ));
+          emit(
+            state.copyWith(
+              isAuthenticating: false,
+              authError: 'Akses ditolak: Hanya untuk petugas kepolisian',
+            ),
+          );
           return;
         }
 
-        emit(state.copyWith(
-          isAuthenticated: true,
-          isAuthenticating: false,
-          token: token,
-          userName: userData['name'],
-          userRole: userData['role'],
-        ));
+        emit(
+          state.copyWith(
+            isAuthenticated: true,
+            isAuthenticating: false,
+            token: token,
+            userName: userData['name'],
+            userRole: userData['role'],
+          ),
+        );
 
         // Connect WebSocket and fetch initial systems data
         dispatchService.connectWebSocket();
         add(LoadInitialDataEvent());
       } else {
-        emit(state.copyWith(
-          isAuthenticating: false,
-          authError: res['message'] ?? 'Login gagal. Periksa kembali email dan password.',
-        ));
+        emit(
+          state.copyWith(
+            isAuthenticating: false,
+            authError:
+                res['message'] ??
+                'Login gagal. Periksa kembali email dan password.',
+          ),
+        );
       }
     } catch (e) {
-      emit(state.copyWith(
-        isAuthenticating: false,
-        authError: 'Gagal terhubung ke backend: ${e.toString()}',
-      ));
+      emit(
+        state.copyWith(
+          isAuthenticating: false,
+          authError: 'Gagal terhubung ke backend: ${e.toString()}',
+        ),
+      );
     }
   }
 
@@ -85,7 +96,10 @@ class DashboardBloc extends Bloc<DashboardEvent, DashboardState> {
     emit(state.copyWith(currentTab: event.index));
   }
 
-  Future<void> _onLoadInitialData(LoadInitialDataEvent event, Emitter<DashboardState> emit) async {
+  Future<void> _onLoadInitialData(
+    LoadInitialDataEvent event,
+    Emitter<DashboardState> emit,
+  ) async {
     emit(state.copyWith(isLoading: true, error: null));
     try {
       final reports = await dispatchService.getActiveReports();
@@ -96,22 +110,26 @@ class DashboardBloc extends Bloc<DashboardEvent, DashboardState> {
       final Map<String, List<Map<String, double>>> logs = {};
       for (var r in reports) {
         logs[r['id']] = [
-          {'latitude': r['latitude'], 'longitude': r['longitude']}
+          {'latitude': r['latitude'], 'longitude': r['longitude']},
         ];
       }
 
-      emit(state.copyWith(
-        isLoading: false,
-        reports: reports,
-        cctvCameras: cameras,
-        patrolUnits: units,
-        gpsTrackLogs: logs,
-      ));
+      emit(
+        state.copyWith(
+          isLoading: false,
+          reports: reports,
+          cctvCameras: cameras,
+          patrolUnits: units,
+          gpsTrackLogs: logs,
+        ),
+      );
     } catch (e) {
-      emit(state.copyWith(
-        isLoading: false,
-        error: 'Gagal memuat data: ${e.toString()}',
-      ));
+      emit(
+        state.copyWith(
+          isLoading: false,
+          error: 'Gagal memuat data: ${e.toString()}',
+        ),
+      );
     }
   }
 
@@ -119,54 +137,69 @@ class DashboardBloc extends Bloc<DashboardEvent, DashboardState> {
     emit(state.copyWith(selectedReport: event.report));
   }
 
-  Future<void> _onAssignPatrolUnit(AssignPatrolUnitEvent event, Emitter<DashboardState> emit) async {
+  Future<void> _onAssignPatrolUnit(
+    AssignPatrolUnitEvent event,
+    Emitter<DashboardState> emit,
+  ) async {
     try {
-      final res = await dispatchService.assignPatrolUnit(event.reportId, event.patrolUnitId);
+      final res = await dispatchService.assignPatrolUnit(
+        event.reportId,
+        event.patrolUnitId,
+      );
       if (res['status'] == 'success') {
         // Reload reports and units
         final reports = await dispatchService.getActiveReports();
         final units = await dispatchService.getPatrolUnits();
-        
+
         // Find if selected report is updated
         Map<String, dynamic>? updatedSelected;
-        if (state.selectedReport != null && state.selectedReport!['id'] == event.reportId) {
+        if (state.selectedReport != null &&
+            state.selectedReport!['id'] == event.reportId) {
           updatedSelected = reports.firstWhere(
             (r) => r['id'] == event.reportId,
             orElse: () => state.selectedReport,
           );
         }
 
-        emit(state.copyWith(
-          reports: reports,
-          patrolUnits: units,
-          selectedReport: updatedSelected ?? state.selectedReport,
-        ));
+        emit(
+          state.copyWith(
+            reports: reports,
+            patrolUnits: units,
+            selectedReport: updatedSelected ?? state.selectedReport,
+          ),
+        );
       }
     } catch (e) {
       print('Error assigning patrol unit: $e');
     }
   }
 
-  void _onNewReportReceived(NewReportReceivedEvent event, Emitter<DashboardState> emit) {
-    final updatedReports = List<dynamic>.from(state.reports)..insert(0, event.report);
-    
+  void _onNewReportReceived(
+    NewReportReceivedEvent event,
+    Emitter<DashboardState> emit,
+  ) {
+    final updatedReports = List<dynamic>.from(state.reports)
+      ..insert(0, event.report);
+
     // Add starting GPS node to track logs
-    final logs = Map<String, List<Map<String, double>>>.from(state.gpsTrackLogs);
+    final logs = Map<String, List<Map<String, double>>>.from(
+      state.gpsTrackLogs,
+    );
     final String reportId = event.report['id'];
     logs[reportId] = [
       {
         'latitude': event.report['latitude'],
         'longitude': event.report['longitude'],
-      }
+      },
     ];
 
-    emit(state.copyWith(
-      reports: updatedReports,
-      gpsTrackLogs: logs,
-    ));
+    emit(state.copyWith(reports: updatedReports, gpsTrackLogs: logs));
   }
 
-  void _onGpsUpdateReceived(GpsUpdateReceivedEvent event, Emitter<DashboardState> emit) {
+  void _onGpsUpdateReceived(
+    GpsUpdateReceivedEvent event,
+    Emitter<DashboardState> emit,
+  ) {
     final String reportId = event.data['reportId'];
     final double lat = event.data['latitude'];
     final double lng = event.data['longitude'];
@@ -174,17 +207,15 @@ class DashboardBloc extends Bloc<DashboardEvent, DashboardState> {
     // Update coordinates in the reports list
     final updatedReports = state.reports.map((r) {
       if (r['id'] == reportId) {
-        return {
-          ...r,
-          'latitude': lat,
-          'longitude': lng,
-        };
+        return {...r, 'latitude': lat, 'longitude': lng};
       }
       return r;
     }).toList();
 
     // Append to logs (PRD F-03 BLE Mesh Tracking)
-    final logs = Map<String, List<Map<String, double>>>.from(state.gpsTrackLogs);
+    final logs = Map<String, List<Map<String, double>>>.from(
+      state.gpsTrackLogs,
+    );
     if (!logs.containsKey(reportId)) {
       logs[reportId] = [];
     }
@@ -197,7 +228,8 @@ class DashboardBloc extends Bloc<DashboardEvent, DashboardState> {
 
     // Update currently selected report if it matches
     Map<String, dynamic>? updatedSelected = state.selectedReport;
-    if (state.selectedReport != null && state.selectedReport!['id'] == reportId) {
+    if (state.selectedReport != null &&
+        state.selectedReport!['id'] == reportId) {
       updatedSelected = {
         ...state.selectedReport!,
         'latitude': lat,
@@ -205,16 +237,22 @@ class DashboardBloc extends Bloc<DashboardEvent, DashboardState> {
       };
     }
 
-    emit(state.copyWith(
-      reports: updatedReports,
-      gpsTrackLogs: logs,
-      selectedReport: updatedSelected,
-    ));
+    emit(
+      state.copyWith(
+        reports: updatedReports,
+        gpsTrackLogs: logs,
+        selectedReport: updatedSelected,
+      ),
+    );
   }
 
-  void _onCctvAlertReceived(CctvAlertReceivedEvent event, Emitter<DashboardState> emit) {
-    final updatedAlerts = List<dynamic>.from(state.cctvAlerts)..insert(0, event.alert);
-    
+  void _onCctvAlertReceived(
+    CctvAlertReceivedEvent event,
+    Emitter<DashboardState> emit,
+  ) {
+    final updatedAlerts = List<dynamic>.from(state.cctvAlerts)
+      ..insert(0, event.alert);
+
     // Also update the respective camera FPS state if we got FPS mode updates
     final String cctvId = event.alert['cctv_id'] ?? event.alert['cctvId'];
     final updatedCameras = state.cctvCameras.map((cam) {
@@ -227,13 +265,15 @@ class DashboardBloc extends Bloc<DashboardEvent, DashboardState> {
       return cam;
     }).toList();
 
-    emit(state.copyWith(
-      cctvAlerts: updatedAlerts,
-      cctvCameras: updatedCameras,
-    ));
+    emit(
+      state.copyWith(cctvAlerts: updatedAlerts, cctvCameras: updatedCameras),
+    );
   }
 
-  Future<void> _onTriggerMockSos(TriggerMockSosEvent event, Emitter<DashboardState> emit) async {
+  Future<void> _onTriggerMockSos(
+    TriggerMockSosEvent event,
+    Emitter<DashboardState> emit,
+  ) async {
     try {
       // Trigger AI Server's mock-mqtt test endpoint to simulate anomaly detection
       // Note AI server runs at port 3002
@@ -242,8 +282,9 @@ class DashboardBloc extends Bloc<DashboardEvent, DashboardState> {
         headers: {'Content-Type': 'application/json'},
         body: jsonEncode({
           'cctv_id': event.cctvId,
-          'confidence': 0.89,
-          'snapshot_url': 'https://images.unsplash.com/photo-1614064641938-3bbee52942c7?auto=format&fit=crop&w=400&q=80',
+          'confidence': 0.95,
+          'snapshot_url':
+              'https://images.unsplash.com/photo-1614064641938-3bbee52942c7?auto=format&fit=crop&w=400&q=80',
           'suspect_feature_vector': event.suspectFeatures,
         }),
       );
@@ -253,16 +294,19 @@ class DashboardBloc extends Bloc<DashboardEvent, DashboardState> {
     }
   }
 
-  Future<void> _onUpdateCctvFps(UpdateCctvFpsEvent event, Emitter<DashboardState> emit) async {
+  Future<void> _onUpdateCctvFps(
+    UpdateCctvFpsEvent event,
+    Emitter<DashboardState> emit,
+  ) async {
     try {
-      final res = await dispatchService.updateCctvFps(event.cctvId, event.fpsMode);
+      final res = await dispatchService.updateCctvFps(
+        event.cctvId,
+        event.fpsMode,
+      );
       if (res['status'] == 'success') {
         final updatedCameras = state.cctvCameras.map((cam) {
           if (cam['id'] == event.cctvId) {
-            return {
-              ...cam,
-              'fps_mode': event.fpsMode,
-            };
+            return {...cam, 'fps_mode': event.fpsMode};
           }
           return cam;
         }).toList();
@@ -274,35 +318,48 @@ class DashboardBloc extends Bloc<DashboardEvent, DashboardState> {
     }
   }
 
-  Future<void> _onFetchSuspectAnalysis(FetchSuspectAnalysisEvent event, Emitter<DashboardState> emit) async {
+  Future<void> _onFetchSuspectAnalysis(
+    FetchSuspectAnalysisEvent event,
+    Emitter<DashboardState> emit,
+  ) async {
     emit(state.copyWith(isLoading: true, error: null));
     try {
-      final routes = await dispatchService.getEscapePrediction(event.startNode, event.headingNode);
-      final predictions = await dispatchService.getReidTracking(event.startNode, event.suspectFeatures);
+      final routes = await dispatchService.getEscapePrediction(
+        event.startNode,
+        event.headingNode,
+      );
+      final predictions = await dispatchService.getReidTracking(
+        event.startNode,
+        event.suspectFeatures,
+      );
 
-      emit(state.copyWith(
-        isLoading: false,
-        predictedRoutes: routes,
-        reidPredictions: predictions,
-      ));
+      emit(
+        state.copyWith(
+          isLoading: false,
+          predictedRoutes: routes,
+          reidPredictions: predictions,
+        ),
+      );
     } catch (e) {
-      emit(state.copyWith(
-        isLoading: false,
-        error: 'Failed to run AI Re-ID / GNN analysis: $e',
-      ));
+      emit(
+        state.copyWith(
+          isLoading: false,
+          error: 'Failed to run AI Re-ID / GNN analysis: $e',
+        ),
+      );
     }
   }
 
-  void _onCctvFpsChangedReceived(CctvFpsChangedReceivedEvent event, Emitter<DashboardState> emit) {
+  void _onCctvFpsChangedReceived(
+    CctvFpsChangedReceivedEvent event,
+    Emitter<DashboardState> emit,
+  ) {
     final String cameraId = event.data['id'] ?? event.data['cctvId'];
     final String fpsMode = event.data['fps_mode'] ?? event.data['fpsMode'];
 
     final updatedCameras = state.cctvCameras.map((cam) {
       if (cam['id'] == cameraId) {
-        return {
-          ...cam,
-          'fps_mode': fpsMode,
-        };
+        return {...cam, 'fps_mode': fpsMode};
       }
       return cam;
     }).toList();

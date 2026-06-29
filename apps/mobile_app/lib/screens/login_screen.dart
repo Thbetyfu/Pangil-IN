@@ -75,10 +75,7 @@ class _LoginScreenState extends State<LoginScreen> {
           gradient: LinearGradient(
             begin: Alignment.topCenter,
             end: Alignment.bottomCenter,
-            colors: [
-              Color(0xFF0F1219),
-              Color(0xFF161B26),
-            ],
+            colors: [Color(0xFF0F1219), Color(0xFF161B26)],
           ),
         ),
         child: SafeArea(
@@ -126,11 +123,16 @@ class _LoginScreenState extends State<LoginScreen> {
                         decoration: BoxDecoration(
                           color: const Color(0xFFFF1744).withOpacity(0.15),
                           borderRadius: BorderRadius.circular(12),
-                          border: Border.all(color: const Color(0xFFFF1744).withOpacity(0.3)),
+                          border: Border.all(
+                            color: const Color(0xFFFF1744).withOpacity(0.3),
+                          ),
                         ),
                         child: Text(
                           _errorMessage!,
-                          style: const TextStyle(color: Color(0xFFFF5252), fontSize: 13),
+                          style: const TextStyle(
+                            color: Color(0xFFFF5252),
+                            fontSize: 13,
+                          ),
                         ),
                       ),
                       const SizedBox(height: 20),
@@ -157,35 +159,57 @@ class _LoginScreenState extends State<LoginScreen> {
                           TextFormField(
                             controller: _emailController,
                             keyboardType: TextInputType.text,
-                            style: const TextStyle(color: Colors.white, fontSize: 14),
+                            style: const TextStyle(
+                              color: Colors.white,
+                              fontSize: 14,
+                            ),
                             decoration: InputDecoration(
                               labelText: 'Email',
-                              labelStyle: const TextStyle(color: Colors.white38, fontSize: 13),
-                              prefixIcon: const Icon(Icons.email_outlined, color: Colors.white38, size: 20),
+                              labelStyle: const TextStyle(
+                                color: Colors.white38,
+                                fontSize: 13,
+                              ),
+                              prefixIcon: const Icon(
+                                Icons.email_outlined,
+                                color: Colors.white38,
+                                size: 20,
+                              ),
                               filled: true,
                               fillColor: Colors.white.withOpacity(0.03),
                               enabledBorder: OutlineInputBorder(
                                 borderRadius: BorderRadius.circular(12),
-                                borderSide: BorderSide(color: Colors.white.withOpacity(0.06)),
+                                borderSide: BorderSide(
+                                  color: Colors.white.withOpacity(0.06),
+                                ),
                               ),
                               focusedBorder: OutlineInputBorder(
                                 borderRadius: BorderRadius.circular(12),
-                                borderSide: const BorderSide(color: Color(0xFFFF1744), width: 1.5),
+                                borderSide: const BorderSide(
+                                  color: Color(0xFFFF1744),
+                                  width: 1.5,
+                                ),
                               ),
                               errorBorder: OutlineInputBorder(
                                 borderRadius: BorderRadius.circular(12),
-                                borderSide: const BorderSide(color: Colors.redAccent),
+                                borderSide: const BorderSide(
+                                  color: Colors.redAccent,
+                                ),
                               ),
                               focusedErrorBorder: OutlineInputBorder(
                                 borderRadius: BorderRadius.circular(12),
-                                borderSide: const BorderSide(color: Colors.redAccent, width: 1.5),
+                                borderSide: const BorderSide(
+                                  color: Colors.redAccent,
+                                  width: 1.5,
+                                ),
                               ),
                             ),
                             validator: (value) {
                               if (value == null || value.trim().isEmpty) {
                                 return 'Email wajib diisi';
                               }
-                              if (!RegExp(r'^[\w-\.]+@([\w-]+\.)+[\w-]{2,4}$').hasMatch(value.trim())) {
+                              if (!RegExp(
+                                r'^[\w-\.]+@([\w-]+\.)+[\w-]{2,4}$',
+                              ).hasMatch(value.trim())) {
                                 return 'Format email tidak valid';
                               }
                               return null;
@@ -197,14 +221,26 @@ class _LoginScreenState extends State<LoginScreen> {
                           TextFormField(
                             controller: _passwordController,
                             obscureText: _obscurePassword,
-                            style: const TextStyle(color: Colors.white, fontSize: 14),
+                            style: const TextStyle(
+                              color: Colors.white,
+                              fontSize: 14,
+                            ),
                             decoration: InputDecoration(
                               labelText: 'Kata Sandi',
-                              labelStyle: const TextStyle(color: Colors.white38, fontSize: 13),
-                              prefixIcon: const Icon(Icons.lock_outline_rounded, color: Colors.white38, size: 20),
+                              labelStyle: const TextStyle(
+                                color: Colors.white38,
+                                fontSize: 13,
+                              ),
+                              prefixIcon: const Icon(
+                                Icons.lock_outline_rounded,
+                                color: Colors.white38,
+                                size: 20,
+                              ),
                               suffixIcon: IconButton(
                                 icon: Icon(
-                                  _obscurePassword ? Icons.visibility_outlined : Icons.visibility_off_outlined,
+                                  _obscurePassword
+                                      ? Icons.visibility_outlined
+                                      : Icons.visibility_off_outlined,
                                   color: Colors.white38,
                                   size: 20,
                                 ),
@@ -218,19 +254,29 @@ class _LoginScreenState extends State<LoginScreen> {
                               fillColor: Colors.white.withOpacity(0.03),
                               enabledBorder: OutlineInputBorder(
                                 borderRadius: BorderRadius.circular(12),
-                                borderSide: BorderSide(color: Colors.white.withOpacity(0.06)),
+                                borderSide: BorderSide(
+                                  color: Colors.white.withOpacity(0.06),
+                                ),
                               ),
                               focusedBorder: OutlineInputBorder(
                                 borderRadius: BorderRadius.circular(12),
-                                borderSide: const BorderSide(color: Color(0xFFFF1744), width: 1.5),
+                                borderSide: const BorderSide(
+                                  color: Color(0xFFFF1744),
+                                  width: 1.5,
+                                ),
                               ),
                               errorBorder: OutlineInputBorder(
                                 borderRadius: BorderRadius.circular(12),
-                                borderSide: const BorderSide(color: Colors.redAccent),
+                                borderSide: const BorderSide(
+                                  color: Colors.redAccent,
+                                ),
                               ),
                               focusedErrorBorder: OutlineInputBorder(
                                 borderRadius: BorderRadius.circular(12),
-                                borderSide: const BorderSide(color: Colors.redAccent, width: 1.5),
+                                borderSide: const BorderSide(
+                                  color: Colors.redAccent,
+                                  width: 1.5,
+                                ),
                               ),
                             ),
                             validator: (value) {
@@ -255,7 +301,9 @@ class _LoginScreenState extends State<LoginScreen> {
                                 borderRadius: BorderRadius.circular(12),
                               ),
                               elevation: 5,
-                              shadowColor: const Color(0xFFFF1744).withOpacity(0.4),
+                              shadowColor: const Color(
+                                0xFFFF1744,
+                              ).withOpacity(0.4),
                             ),
                             onPressed: _isLoading ? null : _handleLogin,
                             child: _isLoading
@@ -264,12 +312,18 @@ class _LoginScreenState extends State<LoginScreen> {
                                     height: 20,
                                     child: CircularProgressIndicator(
                                       strokeWidth: 2.5,
-                                      valueColor: AlwaysStoppedAnimation<Color>(Colors.white),
+                                      valueColor: AlwaysStoppedAnimation<Color>(
+                                        Colors.white,
+                                      ),
                                     ),
                                   )
                                 : const Text(
                                     'MASUK',
-                                    style: TextStyle(fontWeight: FontWeight.w900, fontSize: 13, letterSpacing: 1.0),
+                                    style: TextStyle(
+                                      fontWeight: FontWeight.w900,
+                                      fontSize: 13,
+                                      letterSpacing: 1.0,
+                                    ),
                                   ),
                           ),
                         ],
@@ -283,12 +337,18 @@ class _LoginScreenState extends State<LoginScreen> {
                       children: [
                         Text(
                           'Belum memiliki akun? ',
-                          style: TextStyle(color: Colors.white.withOpacity(0.5), fontSize: 13),
+                          style: TextStyle(
+                            color: Colors.white.withOpacity(0.5),
+                            fontSize: 13,
+                          ),
                         ),
                         GestureDetector(
                           onTap: () {
                             HapticFeedback.lightImpact();
-                            Navigator.pushReplacementNamed(context, '/register');
+                            Navigator.pushReplacementNamed(
+                              context,
+                              '/register',
+                            );
                           },
                           child: const Text(
                             'Daftar Sekarang',

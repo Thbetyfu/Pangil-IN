@@ -19,20 +19,20 @@ class ReportScreen extends StatefulWidget {
 class _ReportScreenState extends State<ReportScreen> {
   final _formKey = GlobalKey<FormState>();
   final _descriptionController = TextEditingController();
-  
+
   XFile? _selectedImage;
   bool _isLocating = false;
   bool _isUploading = false;
   bool _isAnalyzingAi = false;
-  
+
   double? _latitude;
   double? _longitude;
-  
+
   // AI analysis mock states
   String? _aiCaption;
   double? _aiAntiSpoofingScore;
   bool? _isSpoofed;
-  
+
   final ImagePicker _picker = ImagePicker();
 
   @override
@@ -94,7 +94,7 @@ class _ReportScreenState extends State<ReportScreen> {
         desiredAccuracy: LocationAccuracy.high,
         timeLimit: const Duration(seconds: 3),
       );
-      
+
       setState(() {
         _latitude = position.latitude;
         _longitude = position.longitude;
@@ -128,7 +128,7 @@ class _ReportScreenState extends State<ReportScreen> {
         setState(() {
           _selectedImage = image;
         });
-        
+
         // Trigger simulated AI Image Captioning & Anti-Spoofing
         _simulateAiAnalysis();
       } else {
@@ -149,7 +149,8 @@ class _ReportScreenState extends State<ReportScreen> {
       if (mounted) {
         setState(() {
           _isAnalyzingAi = false;
-          _aiCaption = "Terdeteksi pelaku kriminal begal membawa senjata tajam jenis cerurit berboncengan motor bebek tanpa pelat nomor.";
+          _aiCaption =
+              "Terdeteksi pelaku kriminal begal membawa senjata tajam jenis cerurit berboncengan motor bebek tanpa pelat nomor.";
           _aiAntiSpoofingScore = 0.96; // 96% genuine
           _isSpoofed = false;
           // Set text controller to auto-generated description
@@ -164,7 +165,11 @@ class _ReportScreenState extends State<ReportScreen> {
   Future<void> _submitReport() async {
     if (_selectedImage == null) {
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Silakan lampirkan foto bukti kejadian terlebih dahulu.')),
+        const SnackBar(
+          content: Text(
+            'Silakan lampirkan foto bukti kejadian terlebih dahulu.',
+          ),
+        ),
       );
       return;
     }
@@ -183,7 +188,8 @@ class _ReportScreenState extends State<ReportScreen> {
         latitude: _latitude ?? -6.8915,
         longitude: _longitude ?? 107.6161,
         description: _descriptionController.text.trim(),
-        imageUrl: 'https://images.unsplash.com/photo-1517649763962-0c623066013b?w=400',
+        imageUrl:
+            'https://images.unsplash.com/photo-1517649763962-0c623066013b?w=400',
         antiSpoofingScore: _aiAntiSpoofingScore ?? 1.0,
         isSpoofed: _isSpoofed ?? false,
       );
@@ -196,7 +202,10 @@ class _ReportScreenState extends State<ReportScreen> {
             barrierDismissible: false,
             builder: (context) => AlertDialog(
               backgroundColor: const Color(0xFF1E2638),
-              title: const Text('Laporan Terkirim', style: TextStyle(color: Colors.white)),
+              title: const Text(
+                'Laporan Terkirim',
+                style: TextStyle(color: Colors.white),
+              ),
               content: const Text(
                 'Laporan visual Anda berhasil dikirim ke SIGAP Police Command Center dan disiarkan ke warga terdekat.',
                 style: TextStyle(color: Colors.white70),
@@ -207,7 +216,13 @@ class _ReportScreenState extends State<ReportScreen> {
                     Navigator.pop(context); // Close dialog
                     Navigator.pop(context); // Back to Home
                   },
-                  child: const Text('OK', style: TextStyle(color: Color(0xFFFF1744), fontWeight: FontWeight.bold)),
+                  child: const Text(
+                    'OK',
+                    style: TextStyle(
+                      color: Color(0xFFFF1744),
+                      fontWeight: FontWeight.bold,
+                    ),
+                  ),
                 ),
               ],
             ),
@@ -215,12 +230,16 @@ class _ReportScreenState extends State<ReportScreen> {
         }
       } else {
         ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text(result['message'] ?? 'Gagal mengirim laporan.')),
+          SnackBar(
+            content: Text(result['message'] ?? 'Gagal mengirim laporan.'),
+          ),
         );
       }
     } catch (e) {
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Kesalahan jaringan. Gagal menghubungi server.')),
+        const SnackBar(
+          content: Text('Kesalahan jaringan. Gagal menghubungi server.'),
+        ),
       );
     } finally {
       if (mounted) {
@@ -239,7 +258,11 @@ class _ReportScreenState extends State<ReportScreen> {
         backgroundColor: Colors.transparent,
         elevation: 0,
         leading: IconButton(
-          icon: const Icon(Icons.arrow_back_ios_new_rounded, color: Colors.white, size: 20),
+          icon: const Icon(
+            Icons.arrow_back_ios_new_rounded,
+            color: Colors.white,
+            size: 20,
+          ),
           onPressed: () {
             HapticFeedback.lightImpact();
             Navigator.pop(context);
@@ -247,7 +270,11 @@ class _ReportScreenState extends State<ReportScreen> {
         ),
         title: const Text(
           'Laporan Visual Begal',
-          style: TextStyle(color: Colors.white, fontSize: 16, fontWeight: FontWeight.bold),
+          style: TextStyle(
+            color: Colors.white,
+            fontSize: 16,
+            fontWeight: FontWeight.bold,
+          ),
         ),
       ),
       body: Container(
@@ -255,15 +282,15 @@ class _ReportScreenState extends State<ReportScreen> {
           gradient: LinearGradient(
             begin: Alignment.topCenter,
             end: Alignment.bottomCenter,
-            colors: [
-              Color(0xFF0F1219),
-              Color(0xFF161B26),
-            ],
+            colors: [Color(0xFF0F1219), Color(0xFF161B26)],
           ),
         ),
         child: SafeArea(
           child: SingleChildScrollView(
-            padding: const EdgeInsets.symmetric(horizontal: 20.0, vertical: 10.0),
+            padding: const EdgeInsets.symmetric(
+              horizontal: 20.0,
+              vertical: 10.0,
+            ),
             child: Form(
               key: _formKey,
               child: Column(
@@ -272,10 +299,14 @@ class _ReportScreenState extends State<ReportScreen> {
                   // Section: Upload Image Box
                   const Text(
                     'Foto Bukti Kejadian',
-                    style: TextStyle(color: Colors.white, fontSize: 14, fontWeight: FontWeight.bold),
+                    style: TextStyle(
+                      color: Colors.white,
+                      fontSize: 14,
+                      fontWeight: FontWeight.bold,
+                    ),
                   ),
                   const SizedBox(height: 10),
-                  
+
                   GestureDetector(
                     onTap: () {
                       HapticFeedback.lightImpact();
@@ -286,22 +317,37 @@ class _ReportScreenState extends State<ReportScreen> {
                       decoration: BoxDecoration(
                         color: Colors.white.withValues(alpha: 0.02),
                         borderRadius: BorderRadius.circular(16),
-                        border: Border.all(color: Colors.white.withValues(alpha: 0.08), width: 1.5),
+                        border: Border.all(
+                          color: Colors.white.withValues(alpha: 0.08),
+                          width: 1.5,
+                        ),
                       ),
                       child: _selectedImage == null
                           ? Column(
                               mainAxisAlignment: MainAxisAlignment.center,
                               children: [
-                                Icon(Icons.camera_alt_outlined, color: const Color(0xFFFF1744).withValues(alpha: 0.8), size: 40),
+                                Icon(
+                                  Icons.camera_alt_outlined,
+                                  color: const Color(
+                                    0xFFFF1744,
+                                  ).withValues(alpha: 0.8),
+                                  size: 40,
+                                ),
                                 const SizedBox(height: 12),
                                 const Text(
                                   'Ketuk untuk Ambil / Unggah Foto',
-                                  style: TextStyle(color: Colors.white54, fontSize: 12),
+                                  style: TextStyle(
+                                    color: Colors.white54,
+                                    fontSize: 12,
+                                  ),
                                 ),
                                 const SizedBox(height: 4),
                                 const Text(
                                   'Mendukung deteksi AI Anti-Spoofing',
-                                  style: TextStyle(color: Colors.white24, fontSize: 10),
+                                  style: TextStyle(
+                                    color: Colors.white24,
+                                    fontSize: 10,
+                                  ),
                                 ),
                               ],
                             )
@@ -311,17 +357,33 @@ class _ReportScreenState extends State<ReportScreen> {
                                 fit: StackFit.expand,
                                 children: [
                                   // In web context _selectedImage.path is a blob or base64
-                                  _selectedImage!.path.startsWith('http') || _selectedImage!.path.startsWith('blob')
-                                      ? Image.network(_selectedImage!.path, fit: BoxFit.cover)
-                                      : Image.file(File(_selectedImage!.path), fit: BoxFit.cover, errorBuilder: (c, o, s) {
-                                          return Image.network('https://images.unsplash.com/photo-1517649763962-0c623066013b?w=400', fit: BoxFit.cover);
-                                        }),
+                                  _selectedImage!.path.startsWith('http') ||
+                                          _selectedImage!.path.startsWith(
+                                            'blob',
+                                          )
+                                      ? Image.network(
+                                          _selectedImage!.path,
+                                          fit: BoxFit.cover,
+                                        )
+                                      : Image.file(
+                                          File(_selectedImage!.path),
+                                          fit: BoxFit.cover,
+                                          errorBuilder: (c, o, s) {
+                                            return Image.network(
+                                              'https://images.unsplash.com/photo-1517649763962-0c623066013b?w=400',
+                                              fit: BoxFit.cover,
+                                            );
+                                          },
+                                        ),
                                   Container(
                                     decoration: BoxDecoration(
                                       gradient: LinearGradient(
                                         begin: Alignment.topCenter,
                                         end: Alignment.bottomCenter,
-                                        colors: [Colors.transparent, Colors.black.withValues(alpha: 0.7)],
+                                        colors: [
+                                          Colors.transparent,
+                                          Colors.black.withValues(alpha: 0.7),
+                                        ],
                                       ),
                                     ),
                                   ),
@@ -329,7 +391,10 @@ class _ReportScreenState extends State<ReportScreen> {
                                     bottom: 12,
                                     right: 12,
                                     child: Container(
-                                      padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
+                                      padding: const EdgeInsets.symmetric(
+                                        horizontal: 10,
+                                        vertical: 6,
+                                      ),
                                       decoration: BoxDecoration(
                                         color: Colors.black54,
                                         borderRadius: BorderRadius.circular(8),
@@ -337,13 +402,23 @@ class _ReportScreenState extends State<ReportScreen> {
                                       child: const Row(
                                         mainAxisSize: MainAxisSize.min,
                                         children: [
-                                          Icon(Icons.edit_rounded, color: Colors.white, size: 12),
+                                          Icon(
+                                            Icons.edit_rounded,
+                                            color: Colors.white,
+                                            size: 12,
+                                          ),
                                           SizedBox(width: 4),
-                                          Text('Ubah Foto', style: TextStyle(color: Colors.white, fontSize: 10)),
+                                          Text(
+                                            'Ubah Foto',
+                                            style: TextStyle(
+                                              color: Colors.white,
+                                              fontSize: 10,
+                                            ),
+                                          ),
                                         ],
                                       ),
                                     ),
-                                  )
+                                  ),
                                 ],
                               ),
                             ),
@@ -363,7 +438,9 @@ class _ReportScreenState extends State<ReportScreen> {
                             height: 20,
                             child: CircularProgressIndicator(
                               strokeWidth: 2,
-                              valueColor: AlwaysStoppedAnimation<Color>(Color(0xFFFF1744)),
+                              valueColor: AlwaysStoppedAnimation<Color>(
+                                Color(0xFFFF1744),
+                              ),
                             ),
                           ),
                           const SizedBox(width: 16),
@@ -373,16 +450,23 @@ class _ReportScreenState extends State<ReportScreen> {
                               children: [
                                 const Text(
                                   'AI Inference Server Sedang Menganalisis...',
-                                  style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold, fontSize: 12),
+                                  style: TextStyle(
+                                    color: Colors.white,
+                                    fontWeight: FontWeight.bold,
+                                    fontSize: 12,
+                                  ),
                                 ),
                                 const SizedBox(height: 2),
                                 Text(
                                   'Mengidentifikasi pola foto & mendeteksi kecurangan (Anti-Spoofing)',
-                                  style: TextStyle(color: Colors.white.withValues(alpha: 0.5), fontSize: 10),
+                                  style: TextStyle(
+                                    color: Colors.white.withValues(alpha: 0.5),
+                                    fontSize: 10,
+                                  ),
                                 ),
                               ],
                             ),
-                          )
+                          ),
                         ],
                       ),
                     ),
@@ -396,35 +480,59 @@ class _ReportScreenState extends State<ReportScreen> {
                         children: [
                           Row(
                             children: [
-                              const Icon(Icons.psychology_rounded, color: Colors.tealAccent, size: 18),
+                              const Icon(
+                                Icons.psychology_rounded,
+                                color: Colors.tealAccent,
+                                size: 18,
+                              ),
                               const SizedBox(width: 8),
                               const Text(
                                 'Hasil Analisis Copilot AI',
-                                style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold, fontSize: 13),
+                                style: TextStyle(
+                                  color: Colors.white,
+                                  fontWeight: FontWeight.bold,
+                                  fontSize: 13,
+                                ),
                               ),
                               const Spacer(),
                               Container(
-                                padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
+                                padding: const EdgeInsets.symmetric(
+                                  horizontal: 8,
+                                  vertical: 3,
+                                ),
                                 decoration: BoxDecoration(
-                                  color: Colors.tealAccent.withValues(alpha: 0.12),
+                                  color: Colors.tealAccent.withValues(
+                                    alpha: 0.12,
+                                  ),
                                   borderRadius: BorderRadius.circular(6),
                                 ),
                                 child: const Text(
                                   'ANTI-SPOOF: OK',
-                                  style: TextStyle(color: Colors.tealAccent, fontSize: 8, fontWeight: FontWeight.bold),
+                                  style: TextStyle(
+                                    color: Colors.tealAccent,
+                                    fontSize: 8,
+                                    fontWeight: FontWeight.bold,
+                                  ),
                                 ),
-                              )
+                              ),
                             ],
                           ),
                           const SizedBox(height: 12),
                           Text(
                             'Deskripsi Otomatis (Image Captioning):',
-                            style: TextStyle(color: Colors.white.withValues(alpha: 0.5), fontSize: 10),
+                            style: TextStyle(
+                              color: Colors.white.withValues(alpha: 0.5),
+                              fontSize: 10,
+                            ),
                           ),
                           const SizedBox(height: 4),
                           Text(
                             _aiCaption!,
-                            style: const TextStyle(color: Colors.white, fontSize: 12, height: 1.4),
+                            style: const TextStyle(
+                              color: Colors.white,
+                              fontSize: 12,
+                              height: 1.4,
+                            ),
                           ),
                           const SizedBox(height: 10),
                           Row(
@@ -432,14 +540,21 @@ class _ReportScreenState extends State<ReportScreen> {
                             children: [
                               Text(
                                 'Skor Keaslian Kamera:',
-                                style: TextStyle(color: Colors.white.withValues(alpha: 0.4), fontSize: 10),
+                                style: TextStyle(
+                                  color: Colors.white.withValues(alpha: 0.4),
+                                  fontSize: 10,
+                                ),
                               ),
                               Text(
                                 '${((_aiAntiSpoofingScore ?? 0.0) * 100).toStringAsFixed(0)}% Genuine Signature',
-                                style: const TextStyle(color: Colors.greenAccent, fontSize: 10, fontWeight: FontWeight.bold),
-                              )
+                                style: const TextStyle(
+                                  color: Colors.greenAccent,
+                                  fontSize: 10,
+                                  fontWeight: FontWeight.bold,
+                                ),
+                              ),
                             ],
-                          )
+                          ),
                         ],
                       ),
                     ),
@@ -449,7 +564,11 @@ class _ReportScreenState extends State<ReportScreen> {
                   // Section: Geolocation Info Card
                   const Text(
                     'Lokasi Kejadian (GPS)',
-                    style: TextStyle(color: Colors.white, fontSize: 14, fontWeight: FontWeight.bold),
+                    style: TextStyle(
+                      color: Colors.white,
+                      fontSize: 14,
+                      fontWeight: FontWeight.bold,
+                    ),
                   ),
                   const SizedBox(height: 10),
                   GlassCard(
@@ -457,34 +576,57 @@ class _ReportScreenState extends State<ReportScreen> {
                     padding: const EdgeInsets.all(14),
                     child: Row(
                       children: [
-                        const Icon(Icons.location_on_outlined, color: Color(0xFFFF1744), size: 24),
+                        const Icon(
+                          Icons.location_on_outlined,
+                          color: Color(0xFFFF1744),
+                          size: 24,
+                        ),
                         const SizedBox(width: 14),
                         Expanded(
                           child: Column(
                             crossAxisAlignment: CrossAxisAlignment.start,
                             children: [
                               _isLocating
-                                  ? const Text('Mencari sinyal satelit GPS...', style: TextStyle(color: Colors.white70, fontSize: 12))
+                                  ? const Text(
+                                      'Mencari sinyal satelit GPS...',
+                                      style: TextStyle(
+                                        color: Colors.white70,
+                                        fontSize: 12,
+                                      ),
+                                    )
                                   : Text(
                                       _latitude != null && _longitude != null
                                           ? 'Latitude: ${_latitude!.toStringAsFixed(6)}, Longitude: ${_longitude!.toStringAsFixed(6)}'
                                           : 'Koordinat belum ditentukan',
-                                      style: const TextStyle(color: Colors.white, fontSize: 12, fontWeight: FontWeight.bold),
+                                      style: const TextStyle(
+                                        color: Colors.white,
+                                        fontSize: 12,
+                                        fontWeight: FontWeight.bold,
+                                      ),
                                     ),
                               const SizedBox(height: 2),
                               Text(
                                 _latitude != null && _longitude != null
                                     ? 'Lokasi berhasil terdeteksi otomatis'
                                     : 'Nyalakan GPS Anda untuk akurasi optimal',
-                                style: TextStyle(color: Colors.white.withValues(alpha: 0.4), fontSize: 10),
+                                style: TextStyle(
+                                  color: Colors.white.withValues(alpha: 0.4),
+                                  fontSize: 10,
+                                ),
                               ),
                             ],
                           ),
                         ),
                         IconButton(
-                          icon: Icon(Icons.my_location_rounded, color: _isLocating ? Colors.white30 : Colors.tealAccent, size: 20),
+                          icon: Icon(
+                            Icons.my_location_rounded,
+                            color: _isLocating
+                                ? Colors.white30
+                                : Colors.tealAccent,
+                            size: 20,
+                          ),
                           onPressed: _isLocating ? null : _determinePosition,
-                        )
+                        ),
                       ],
                     ),
                   ),
@@ -493,7 +635,11 @@ class _ReportScreenState extends State<ReportScreen> {
                   // Section: Manual Description Input
                   const Text(
                     'Detail Keterangan Tambahan',
-                    style: TextStyle(color: Colors.white, fontSize: 14, fontWeight: FontWeight.bold),
+                    style: TextStyle(
+                      color: Colors.white,
+                      fontSize: 14,
+                      fontWeight: FontWeight.bold,
+                    ),
                   ),
                   const SizedBox(height: 10),
                   TextFormField(
@@ -501,17 +647,26 @@ class _ReportScreenState extends State<ReportScreen> {
                     maxLines: 4,
                     style: const TextStyle(color: Colors.white, fontSize: 13),
                     decoration: InputDecoration(
-                      hintText: 'Masukkan ciri-ciri pelaku, arah kabur, jenis motor, atau informasi pelengkap lainnya...',
-                      hintStyle: const TextStyle(color: Colors.white24, fontSize: 12),
+                      hintText:
+                          'Masukkan ciri-ciri pelaku, arah kabur, jenis motor, atau informasi pelengkap lainnya...',
+                      hintStyle: const TextStyle(
+                        color: Colors.white24,
+                        fontSize: 12,
+                      ),
                       filled: true,
                       fillColor: Colors.white.withValues(alpha: 0.02),
                       enabledBorder: OutlineInputBorder(
                         borderRadius: BorderRadius.circular(12),
-                        borderSide: BorderSide(color: Colors.white.withValues(alpha: 0.06)),
+                        borderSide: BorderSide(
+                          color: Colors.white.withValues(alpha: 0.06),
+                        ),
                       ),
                       focusedBorder: OutlineInputBorder(
                         borderRadius: BorderRadius.circular(12),
-                        borderSide: const BorderSide(color: Color(0xFFFF1744), width: 1.5),
+                        borderSide: const BorderSide(
+                          color: Color(0xFFFF1744),
+                          width: 1.5,
+                        ),
                       ),
                       errorBorder: OutlineInputBorder(
                         borderRadius: BorderRadius.circular(12),
@@ -519,7 +674,10 @@ class _ReportScreenState extends State<ReportScreen> {
                       ),
                       focusedErrorBorder: OutlineInputBorder(
                         borderRadius: BorderRadius.circular(12),
-                        borderSide: const BorderSide(color: Colors.redAccent, width: 1.5),
+                        borderSide: const BorderSide(
+                          color: Colors.redAccent,
+                          width: 1.5,
+                        ),
                       ),
                     ),
                     validator: (value) {
@@ -541,7 +699,9 @@ class _ReportScreenState extends State<ReportScreen> {
                         borderRadius: BorderRadius.circular(12),
                       ),
                       elevation: 5,
-                      shadowColor: const Color(0xFFFF1744).withValues(alpha: 0.4),
+                      shadowColor: const Color(
+                        0xFFFF1744,
+                      ).withValues(alpha: 0.4),
                     ),
                     onPressed: _isUploading ? null : _submitReport,
                     child: _isUploading
@@ -550,12 +710,18 @@ class _ReportScreenState extends State<ReportScreen> {
                             height: 20,
                             child: CircularProgressIndicator(
                               strokeWidth: 2.5,
-                              valueColor: AlwaysStoppedAnimation<Color>(Colors.white),
+                              valueColor: AlwaysStoppedAnimation<Color>(
+                                Colors.white,
+                              ),
                             ),
                           )
                         : const Text(
                             'KIRIM LAPORAN VISUAL',
-                            style: TextStyle(fontWeight: FontWeight.w900, fontSize: 13, letterSpacing: 1.0),
+                            style: TextStyle(
+                              fontWeight: FontWeight.w900,
+                              fontSize: 13,
+                              letterSpacing: 1.0,
+                            ),
                           ),
                   ),
                 ],
@@ -578,16 +744,28 @@ class _ReportScreenState extends State<ReportScreen> {
         child: Wrap(
           children: [
             ListTile(
-              leading: const Icon(Icons.camera_alt_rounded, color: Color(0xFFFF1744)),
-              title: const Text('Ambil Foto Kamera', style: TextStyle(color: Colors.white, fontSize: 13)),
+              leading: const Icon(
+                Icons.camera_alt_rounded,
+                color: Color(0xFFFF1744),
+              ),
+              title: const Text(
+                'Ambil Foto Kamera',
+                style: TextStyle(color: Colors.white, fontSize: 13),
+              ),
               onTap: () {
                 Navigator.pop(context);
                 _pickImage(ImageSource.camera);
               },
             ),
             ListTile(
-              leading: const Icon(Icons.photo_library_rounded, color: Color(0xFFFF1744)),
-              title: const Text('Pilih dari Galeri', style: TextStyle(color: Colors.white, fontSize: 13)),
+              leading: const Icon(
+                Icons.photo_library_rounded,
+                color: Color(0xFFFF1744),
+              ),
+              title: const Text(
+                'Pilih dari Galeri',
+                style: TextStyle(color: Colors.white, fontSize: 13),
+              ),
               onTap: () {
                 Navigator.pop(context);
                 _pickImage(ImageSource.gallery);

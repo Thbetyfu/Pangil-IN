@@ -9,6 +9,7 @@ class SosState {
   final String? reportId;
   final String? errorMessage;
   final bool fakeShutdown;
+  final String fakeShutdownMethod;
 
   SosState({
     this.status = SosStatus.idle,
@@ -19,6 +20,7 @@ class SosState {
     this.reportId,
     this.errorMessage,
     this.fakeShutdown = false,
+    this.fakeShutdownMethod = 'volume_chord',
   });
 
   SosState copyWith({
@@ -30,6 +32,7 @@ class SosState {
     String? reportId,
     String? errorMessage,
     bool? fakeShutdown,
+    String? fakeShutdownMethod,
   }) {
     return SosState(
       status: status ?? this.status,
@@ -40,6 +43,7 @@ class SosState {
       reportId: reportId ?? this.reportId,
       errorMessage: errorMessage ?? this.errorMessage,
       fakeShutdown: fakeShutdown ?? this.fakeShutdown,
+      fakeShutdownMethod: fakeShutdownMethod ?? this.fakeShutdownMethod,
     );
   }
 }

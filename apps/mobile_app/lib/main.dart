@@ -14,7 +14,7 @@ import 'database/local_database.dart';
 void main() {
   // Ensure widget bindings are initialized
   WidgetsFlutterBinding.ensureInitialized();
-  
+
   final database = LocalDatabase();
   final apiService = ApiService(database: database);
   runApp(MyApp(apiService: apiService, database: database));

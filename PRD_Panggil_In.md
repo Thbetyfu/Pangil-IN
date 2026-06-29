@@ -7,7 +7,7 @@ Dokumen ini mendefinisikan persyaratan fungsional dan non-fungsional untuk proye
 * **Nama Proyek:** Panggil-In (Sistem Deteksi & Penanganan Begal Cerdas)
 * **Versi PRD & Tanggal:** v1.3.0 / 2026-06-29
 * **Target Tech Stack (Unified Flutter Monorepo):**
-  * **Frontend Mobile (Citizen & Crowd Client):** Flutter Mobile (Dart) untuk Android (min. SDK 26 / Android 8.0) dan iOS (min. iOS 13) dengan State Management **BLoC** (Business Logic Component). Penyimpanan lokal menggunakan **SQLite dengan Drift ORM** untuk mendukung sinkronisasi offline. Terintegrasi dengan sensor ponsel (Accelerometer, Gyroscope) dan modul Bluetooth Low Energy (BLE) untuk beaconing.
+  * **Frontend Mobile (Citizen & Crowd Client):** Flutter Mobile (Dart) untuk Android (min. SDK 26 / Android 8.0) dan iOS (min. iOS 13) dengan State Management **BLoC** (Business Logic Component) (juga mendukung kompilasi platform Web sebagai platform sekunder untuk keperluan demonstrasi/pengujian notifikasi instan berbasis HTML5). Penyimpanan lokal menggunakan **SQLite dengan Drift ORM** untuk mendukung sinkronisasi offline. Terintegrasi dengan sensor ponsel (Accelerometer, Gyroscope) dan modul Bluetooth Low Energy (BLE) untuk beaconing.
   * **Frontend Desktop (Police SIGAP Client):** Flutter Desktop (Dart) untuk sistem operasi desktop (target utama Windows Desktop) dengan State Management **BLoC**. Memanfaatkan pustaka grafis native C++ via Flutter desktop plugin untuk kelancaran rendering *live stream* video.
   * **Backend / API Gateway:** Node.js (Express) dengan TypeScript, Socket.io (WebSockets) untuk sinkronisasi pesan & koordinasi alert umum, dan MQTT Broker (seperti Mosquitto/EMQX) untuk penerimaan *high-frequency streaming* data GPS dari klien seluler.
   * **AI Inference Server:** Python (FastAPI) untuk melayani inferensi model YOLOv9, DeepSORT, EfficientNet-B4, LSTM (Behavior & NLP), dan Graph Neural Networks (GNN).
@@ -128,6 +128,11 @@ Aplikasi desktop SIGAP menggunakan struktur navigasi berbasis panel (*Sidebar Na
   2. **Metode 1 (Pelacakan Internet Terhubung):** Mengaktifkan *Persistent Foreground Service* dengan prioritas tertinggi OS. Koordinat GPS dienkripsi secara lokal menggunakan algoritma AES-256 (kunci enkripsi dinamis per sesi SOS) sebelum dikirimkan ke SIGAP Desktop pusat komando secara *real-time* setiap 2 detik menggunakan protokol komunikasi MQTT dengan tingkat keandalan QoS 1 (At least once).
   3. **Metode 2 - Taktik A (Stealth SMS Ping - Tanpa Paket Data):** Jika *Network State Listener* mendeteksi koneksi internet terputus (dimatikan oleh pelaku), aplikasi otomatis beralih menggunakan jaringan seluler seluler biasa (2G/3G/4G) untuk mengirimkan SMS Latar Belakang (*Stealth SMS*) berisi koordinat GPS terenkripsi ke SMS Gateway pusat komando setiap 30 detik secara senyap tanpa riwayat SMS.
   4. **Metode 2 - Taktik B (BLE Mesh Beaconing - SIM Card Dicabut):** Jika kartu SIM dicabut (sinyal seluler mati total), aplikasi menyalakan pemancar Bluetooth Low Energy (BLE) secara pasif untuk memancarkan sinyal ID darurat terenkripsi (radius pancar 100 meter). Ketika sinyal ini ditangkap oleh HP warga sekitar yang sedang terhubung ke internet, HP warga tersebut otomatis melaporkan koordinat GPS pertemuan tersebut ke server pusat secara anonim (*crowdsourced relay*).
+  5. **Mekanisme Keluar Fake Shutdown (Exit Gestures):** Menyediakan opsi pembatalan mode samaran (layar hitam) yang dapat dikonfigurasi melalui menu pengaturan profil warga. Pilihan metode meliputi:
+     * **Volume Chord:** Urutan penekanan tombol Volume Up diikuti Volume Down secara bergantian dalam waktu 2 detik.
+     * **Double Tap:** Mengetuk layar hitam secara cepat sebanyak 2 kali.
+     * **Long Press:** Menekan dan menahan layar hitam selama 2 detik.
+     * **Shake (Goyang HP):** Menggoyangkan ponsel dengan kekuatan sedang (akselerasi magnitude > 15 m/s² dibaca oleh accelerometer).
 * **Kriteria Penerimaan (Acceptance Criteria - Gherkin Format):**
   * **Skenario 1: Menjalankan Fake Shutdown dan Pelacakan MQTT Real-Time**
     * **Given:** Mode SOS aktif dan HP terhubung ke paket data seluler.
@@ -196,6 +201,8 @@ Aplikasi desktop SIGAP menggunakan struktur navigasi berbasis panel (*Sidebar Na
      * Sistem otomatis menaikkan kualitas tangkapan video ke **High Frame-Rate (30 FPS)** dan resolusi maksimum (1080p).
      * Mengaktifkan modul analisis tingkat tinggi: **DeepSORT Tracking** dan **Pose Estimation** secara otomatis.
   3. Jika dalam waktu 2 menit tidak terdeteksi eskalasi anomali lanjutan, sistem mengembalikan kamera ke mode hemat komputasi (Low FPS/resolusi standar).
+  4. **Simulasi Offline / Fallback Video Lokal:** Untuk kebutuhan demo atau jika umpan stream HLS/RTSP tidak tersedia, sistem mendukung pemutaran berkas video lokal berformat `.mp4` (diambil dari direktori `/static/` atau static assets) menggunakan pustaka `media_kit`. Waktu mulai pemutaran video pada masing-masing kamera diatur dengan jeda bertahap (*staggered offset* sebesar `cameraIndex * 4000` milidetik) untuk menyimulasikan pergerakan pelaku melintasi area yang berbeda (estafet tracking).
+  5. **Animasi Sinkron Bounding Box YOLOv9:** Bounding box tersangka dan senjata tajam pada visualisasi antarmuka demo dianimasikan koordinatnya secara dinamis mengikuti timeline pemutaran berkas video lokal (misalnya pergerakan tersangka melintasi lorong/jalan), guna mempresentasikan visualisasi deteksi AI real-time secara presisi selama pengujian.
 * **Kriteria Penerimaan (Acceptance Criteria - Gherkin Format):**
   * **Skenario 1: Anomali Terdeteksi dan Meningkatkan Kualitas Video CCTV**
     * **Given:** Kamera CCTV Simpang Dago 01 berada dalam mode *monitoring* hemat komputasi (10 FPS, 480p).

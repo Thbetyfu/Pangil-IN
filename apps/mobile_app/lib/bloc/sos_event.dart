@@ -3,7 +3,10 @@ abstract class SosEvent {}
 class TriggerSosConfirmationEvent extends SosEvent {
   final double latitude;
   final double longitude;
-  TriggerSosConfirmationEvent({required this.latitude, required this.longitude});
+  TriggerSosConfirmationEvent({
+    required this.latitude,
+    required this.longitude,
+  });
 }
 
 class ConfirmSosEvent extends SosEvent {
@@ -33,4 +36,9 @@ class ToggleFakeShutdownEvent extends SosEvent {
 class TriggerStealthSosEvent extends SosEvent {
   final String? phrase;
   TriggerStealthSosEvent({this.phrase});
+}
+
+class ChangeFakeShutdownMethodEvent extends SosEvent {
+  final String method;
+  ChangeFakeShutdownMethodEvent({required this.method});
 }

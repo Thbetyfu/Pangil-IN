@@ -48,11 +48,15 @@ class _ReportsListScreenState extends State<ReportsListScreen> {
           }
           // 4. Search Query (Reporter name, ID, or description)
           if (_searchQuery.isNotEmpty) {
-            final name = (report['reporter']?['name'] ?? '').toString().toLowerCase();
+            final name = (report['reporter']?['name'] ?? '')
+                .toString()
+                .toLowerCase();
             final desc = (report['description'] ?? '').toString().toLowerCase();
             final id = report['id'].toString().toLowerCase();
             final query = _searchQuery.toLowerCase();
-            if (!name.contains(query) && !desc.contains(query) && !id.contains(query)) {
+            if (!name.contains(query) &&
+                !desc.contains(query) &&
+                !id.contains(query)) {
               return false;
             }
           }
@@ -67,11 +71,18 @@ class _ReportsListScreenState extends State<ReportsListScreen> {
               // Header
               const Text(
                 'DAFTAR LAPORAN MASUK',
-                style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold, letterSpacing: 1),
+                style: TextStyle(
+                  fontSize: 20,
+                  fontWeight: FontWeight.bold,
+                  letterSpacing: 1,
+                ),
               ),
               Text(
                 'Verifikasi, Klasifikasi Tingkat Urgensi, dan Manajemen Penugasan Laporan Begal',
-                style: TextStyle(fontSize: 12, color: Colors.white.withOpacity(0.5)),
+                style: TextStyle(
+                  fontSize: 12,
+                  color: Colors.white.withOpacity(0.5),
+                ),
               ),
               const SizedBox(height: 24),
 
@@ -88,19 +99,32 @@ class _ReportsListScreenState extends State<ReportsListScreen> {
                         controller: _searchController,
                         style: const TextStyle(fontSize: 13),
                         decoration: InputDecoration(
-                          prefixIcon: Icon(Icons.search_rounded, color: Colors.white.withOpacity(0.4), size: 18),
+                          prefixIcon: Icon(
+                            Icons.search_rounded,
+                            color: Colors.white.withOpacity(0.4),
+                            size: 18,
+                          ),
                           hintText: 'Cari nama pelapor, ID, atau deskripsi...',
-                          hintStyle: TextStyle(color: Colors.white.withOpacity(0.3)),
+                          hintStyle: TextStyle(
+                            color: Colors.white.withOpacity(0.3),
+                          ),
                           filled: true,
                           fillColor: Colors.black12,
-                          contentPadding: const EdgeInsets.symmetric(vertical: 0, horizontal: 16),
+                          contentPadding: const EdgeInsets.symmetric(
+                            vertical: 0,
+                            horizontal: 16,
+                          ),
                           enabledBorder: OutlineInputBorder(
                             borderRadius: BorderRadius.circular(8),
-                            borderSide: BorderSide(color: Colors.white.withOpacity(0.06)),
+                            borderSide: BorderSide(
+                              color: Colors.white.withOpacity(0.06),
+                            ),
                           ),
                           focusedBorder: OutlineInputBorder(
                             borderRadius: BorderRadius.circular(8),
-                            borderSide: const BorderSide(color: SigapTheme.primaryColor),
+                            borderSide: const BorderSide(
+                              color: SigapTheme.primaryColor,
+                            ),
                           ),
                         ),
                         onChanged: (val) {
@@ -116,7 +140,13 @@ class _ReportsListScreenState extends State<ReportsListScreen> {
                     _buildDropdownFilter(
                       label: 'STATUS',
                       value: _statusFilter,
-                      items: const ['ALL', 'PENDING', 'ON_PROCESS', 'RESOLVED', 'REJECTED'],
+                      items: const [
+                        'ALL',
+                        'PENDING',
+                        'ON_PROCESS',
+                        'RESOLVED',
+                        'REJECTED',
+                      ],
                       onChanged: (val) {
                         setState(() => _statusFilter = val!);
                       },
@@ -158,11 +188,18 @@ class _ReportsListScreenState extends State<ReportsListScreen> {
                           child: Column(
                             mainAxisAlignment: MainAxisAlignment.center,
                             children: [
-                              Icon(Icons.feed_outlined, color: Colors.white.withOpacity(0.15), size: 48),
+                              Icon(
+                                Icons.feed_outlined,
+                                color: Colors.white.withOpacity(0.15),
+                                size: 48,
+                              ),
                               const SizedBox(height: 16),
                               Text(
                                 'Tidak ada laporan yang sesuai dengan filter',
-                                style: TextStyle(color: Colors.white.withOpacity(0.4), fontSize: 14),
+                                style: TextStyle(
+                                  color: Colors.white.withOpacity(0.4),
+                                  fontSize: 14,
+                                ),
                               ),
                             ],
                           ),
@@ -170,34 +207,117 @@ class _ReportsListScreenState extends State<ReportsListScreen> {
                       : SingleChildScrollView(
                           scrollDirection: Axis.vertical,
                           child: DataTable(
-                            headingRowColor: WidgetStateProperty.all(Colors.white.withOpacity(0.02)),
+                            headingRowColor: WidgetStateProperty.all(
+                              Colors.white.withOpacity(0.02),
+                            ),
                             dataRowMaxHeight: 64,
                             columns: const [
-                              DataColumn(label: Text('PELAPOR & KONTAK', style: TextStyle(fontWeight: FontWeight.bold, fontSize: 12))),
-                              DataColumn(label: Text('TIPE INPUT', style: TextStyle(fontWeight: FontWeight.bold, fontSize: 12))),
-                              DataColumn(label: Text('URGENSI', style: TextStyle(fontWeight: FontWeight.bold, fontSize: 12))),
-                              DataColumn(label: Text('STATUS', style: TextStyle(fontWeight: FontWeight.bold, fontSize: 12))),
-                              DataColumn(label: Text('VALIDASI AI', style: TextStyle(fontWeight: FontWeight.bold, fontSize: 12))),
-                              DataColumn(label: Text('TANGGAL MASUK', style: TextStyle(fontWeight: FontWeight.bold, fontSize: 12))),
-                              DataColumn(label: Text('AKSI', style: TextStyle(fontWeight: FontWeight.bold, fontSize: 12))),
+                              DataColumn(
+                                label: Text(
+                                  'PELAPOR & KONTAK',
+                                  style: TextStyle(
+                                    fontWeight: FontWeight.bold,
+                                    fontSize: 12,
+                                  ),
+                                ),
+                              ),
+                              DataColumn(
+                                label: Text(
+                                  'TIPE INPUT',
+                                  style: TextStyle(
+                                    fontWeight: FontWeight.bold,
+                                    fontSize: 12,
+                                  ),
+                                ),
+                              ),
+                              DataColumn(
+                                label: Text(
+                                  'URGENSI',
+                                  style: TextStyle(
+                                    fontWeight: FontWeight.bold,
+                                    fontSize: 12,
+                                  ),
+                                ),
+                              ),
+                              DataColumn(
+                                label: Text(
+                                  'STATUS',
+                                  style: TextStyle(
+                                    fontWeight: FontWeight.bold,
+                                    fontSize: 12,
+                                  ),
+                                ),
+                              ),
+                              DataColumn(
+                                label: Text(
+                                  'VALIDASI AI',
+                                  style: TextStyle(
+                                    fontWeight: FontWeight.bold,
+                                    fontSize: 12,
+                                  ),
+                                ),
+                              ),
+                              DataColumn(
+                                label: Text(
+                                  'TANGGAL MASUK',
+                                  style: TextStyle(
+                                    fontWeight: FontWeight.bold,
+                                    fontSize: 12,
+                                  ),
+                                ),
+                              ),
+                              DataColumn(
+                                label: Text(
+                                  'AKSI',
+                                  style: TextStyle(
+                                    fontWeight: FontWeight.bold,
+                                    fontSize: 12,
+                                  ),
+                                ),
+                              ),
                             ],
                             rows: filteredReports.map((report) {
-                              final reporterName = report['reporter']?['name'] ?? 'Warga Anonim';
-                              final reporterPhone = report['reporter']?['phone'] ?? '-';
-                              final type = report['type'] == 'SOS_VOICE' ? 'SOS Voice (Zero-Click)' : 'Laporan Visual';
-                              final createdDate = DateTime.parse(report['created_at'] ?? report['createdAt'] ?? DateTime.now().toIso8601String()).toLocal();
-                              
+                              final reporterName =
+                                  report['reporter']?['name'] ?? 'Warga Anonim';
+                              final reporterPhone =
+                                  report['reporter']?['phone'] ?? '-';
+                              final type = report['type'] == 'SOS_VOICE'
+                                  ? 'SOS Voice (Zero-Click)'
+                                  : 'Laporan Visual';
+                              final createdDate = DateTime.parse(
+                                report['created_at'] ??
+                                    report['createdAt'] ??
+                                    DateTime.now().toIso8601String(),
+                              ).toLocal();
+
                               return DataRow(
                                 cells: [
                                   // Pelapor
                                   DataCell(
                                     Column(
-                                      crossAxisAlignment: CrossAxisAlignment.start,
-                                      mainAxisAlignment: MainAxisAlignment.center,
+                                      crossAxisAlignment:
+                                          CrossAxisAlignment.start,
+                                      mainAxisAlignment:
+                                          MainAxisAlignment.center,
                                       children: [
-                                        Text(reporterName, style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 13, color: Colors.white)),
+                                        Text(
+                                          reporterName,
+                                          style: const TextStyle(
+                                            fontWeight: FontWeight.bold,
+                                            fontSize: 13,
+                                            color: Colors.white,
+                                          ),
+                                        ),
                                         const SizedBox(height: 2),
-                                        Text(reporterPhone, style: TextStyle(fontSize: 10, color: Colors.white.withOpacity(0.5))),
+                                        Text(
+                                          reporterPhone,
+                                          style: TextStyle(
+                                            fontSize: 10,
+                                            color: Colors.white.withOpacity(
+                                              0.5,
+                                            ),
+                                          ),
+                                        ),
                                       ],
                                     ),
                                   ),
@@ -206,45 +326,79 @@ class _ReportsListScreenState extends State<ReportsListScreen> {
                                     Row(
                                       children: [
                                         Icon(
-                                          report['type'] == 'SOS_VOICE' ? Icons.phone_android_rounded : Icons.camera_alt_rounded,
+                                          report['type'] == 'SOS_VOICE'
+                                              ? Icons.phone_android_rounded
+                                              : Icons.camera_alt_rounded,
                                           size: 16,
                                           color: Colors.white.withOpacity(0.6),
                                         ),
                                         const SizedBox(width: 8),
-                                        Text(type, style: const TextStyle(fontSize: 12)),
+                                        Text(
+                                          type,
+                                          style: const TextStyle(fontSize: 12),
+                                        ),
                                       ],
                                     ),
                                   ),
                                   // Urgensi
-                                  DataCell(_buildUrgencyBadge(report['urgency'])),
+                                  DataCell(
+                                    _buildUrgencyBadge(report['urgency']),
+                                  ),
                                   // Status
                                   DataCell(_buildStatusBadge(report['status'])),
                                   // Validasi AI (Anti Spoofing)
-                                  DataCell(_buildSpoofIndicator(report['is_spoofed'] == true, report['anti_spoofing_score'])),
+                                  DataCell(
+                                    _buildSpoofIndicator(
+                                      report['is_spoofed'] == true,
+                                      report['anti_spoofing_score'],
+                                    ),
+                                  ),
                                   // Tanggal
-                                  DataCell(Text(
-                                    '${createdDate.day}/${createdDate.month}/${createdDate.year} - ${createdDate.hour.toString().padLeft(2, '0')}:${createdDate.minute.toString().padLeft(2, '0')}',
-                                    style: const TextStyle(fontSize: 12),
-                                  )),
+                                  DataCell(
+                                    Text(
+                                      '${createdDate.day}/${createdDate.month}/${createdDate.year} - ${createdDate.hour.toString().padLeft(2, '0')}:${createdDate.minute.toString().padLeft(2, '0')}',
+                                      style: const TextStyle(fontSize: 12),
+                                    ),
+                                  ),
                                   // Aksi
                                   DataCell(
                                     ElevatedButton(
                                       style: ElevatedButton.styleFrom(
-                                        backgroundColor: SigapTheme.primaryColor.withOpacity(0.12),
-                                        foregroundColor: SigapTheme.primaryColor,
+                                        backgroundColor: SigapTheme.primaryColor
+                                            .withOpacity(0.12),
+                                        foregroundColor:
+                                            SigapTheme.primaryColor,
                                         elevation: 0,
-                                        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(6)),
-                                        padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+                                        shape: RoundedRectangleBorder(
+                                          borderRadius: BorderRadius.circular(
+                                            6,
+                                          ),
+                                        ),
+                                        padding: const EdgeInsets.symmetric(
+                                          horizontal: 12,
+                                          vertical: 8,
+                                        ),
                                       ),
                                       onPressed: () {
-                                        context.read<DashboardBloc>().add(SelectReportEvent(report));
+                                        context.read<DashboardBloc>().add(
+                                          SelectReportEvent(report),
+                                        );
                                       },
                                       child: const Row(
                                         mainAxisSize: MainAxisSize.min,
                                         children: [
-                                          Text('Proses', style: TextStyle(fontSize: 11, fontWeight: FontWeight.bold)),
+                                          Text(
+                                            'Proses',
+                                            style: TextStyle(
+                                              fontSize: 11,
+                                              fontWeight: FontWeight.bold,
+                                            ),
+                                          ),
                                           SizedBox(width: 4),
-                                          Icon(Icons.arrow_forward_ios_rounded, size: 10),
+                                          Icon(
+                                            Icons.arrow_forward_ios_rounded,
+                                            size: 10,
+                                          ),
                                         ],
                                       ),
                                     ),
@@ -275,7 +429,12 @@ class _ReportsListScreenState extends State<ReportsListScreen> {
       children: [
         Text(
           label,
-          style: TextStyle(fontSize: 9, fontWeight: FontWeight.bold, color: Colors.white.withOpacity(0.4), letterSpacing: 0.5),
+          style: TextStyle(
+            fontSize: 9,
+            fontWeight: FontWeight.bold,
+            color: Colors.white.withOpacity(0.4),
+            letterSpacing: 0.5,
+          ),
         ),
         const SizedBox(height: 4),
         Container(
@@ -290,13 +449,17 @@ class _ReportsListScreenState extends State<ReportsListScreen> {
             child: DropdownButton<String>(
               value: value,
               dropdownColor: SigapTheme.surfaceColor,
-              style: const TextStyle(color: Colors.white, fontSize: 12, fontWeight: FontWeight.w600),
-              icon: Icon(Icons.arrow_drop_down_rounded, color: Colors.white.withOpacity(0.6)),
+              style: const TextStyle(
+                color: Colors.white,
+                fontSize: 12,
+                fontWeight: FontWeight.w600,
+              ),
+              icon: Icon(
+                Icons.arrow_drop_down_rounded,
+                color: Colors.white.withOpacity(0.6),
+              ),
               items: items.map((String item) {
-                return DropdownMenuItem<String>(
-                  value: item,
-                  child: Text(item),
-                );
+                return DropdownMenuItem<String>(value: item, child: Text(item));
               }).toList(),
               onChanged: onChanged,
             ),
@@ -308,7 +471,8 @@ class _ReportsListScreenState extends State<ReportsListScreen> {
 
   Widget _buildUrgencyBadge(String urgency) {
     Color color = Colors.orangeAccent;
-    if (urgency == 'CRITICAL' || urgency == 'HIGH') color = SigapTheme.primaryColor;
+    if (urgency == 'CRITICAL' || urgency == 'HIGH')
+      color = SigapTheme.primaryColor;
     if (urgency == 'LOW') color = Colors.blueAccent;
 
     return Container(
@@ -320,7 +484,12 @@ class _ReportsListScreenState extends State<ReportsListScreen> {
       ),
       child: Text(
         urgency,
-        style: TextStyle(color: color, fontSize: 10, fontWeight: FontWeight.w900, letterSpacing: 0.5),
+        style: TextStyle(
+          color: color,
+          fontSize: 10,
+          fontWeight: FontWeight.w900,
+          letterSpacing: 0.5,
+        ),
       ),
     );
   }
@@ -339,7 +508,11 @@ class _ReportsListScreenState extends State<ReportsListScreen> {
       ),
       child: Text(
         status.replaceAll('_', ' '),
-        style: TextStyle(color: color, fontSize: 10, fontWeight: FontWeight.bold),
+        style: TextStyle(
+          color: color,
+          fontSize: 10,
+          fontWeight: FontWeight.bold,
+        ),
       ),
     );
   }
@@ -350,11 +523,19 @@ class _ReportsListScreenState extends State<ReportsListScreen> {
       return Row(
         mainAxisSize: MainAxisSize.min,
         children: [
-          const Icon(Icons.error_outline_rounded, color: Colors.redAccent, size: 14),
+          const Icon(
+            Icons.error_outline_rounded,
+            color: Colors.redAccent,
+            size: 14,
+          ),
           const SizedBox(width: 6),
           Text(
             'SPOOF DETECTED (${(actualScore * 100).toStringAsFixed(0)}%)',
-            style: const TextStyle(color: Colors.redAccent, fontSize: 10, fontWeight: FontWeight.bold),
+            style: const TextStyle(
+              color: Colors.redAccent,
+              fontSize: 10,
+              fontWeight: FontWeight.bold,
+            ),
           ),
         ],
       );
@@ -362,11 +543,19 @@ class _ReportsListScreenState extends State<ReportsListScreen> {
       return Row(
         mainAxisSize: MainAxisSize.min,
         children: [
-          const Icon(Icons.verified_rounded, color: SigapTheme.successColor, size: 14),
+          const Icon(
+            Icons.verified_rounded,
+            color: SigapTheme.successColor,
+            size: 14,
+          ),
           const SizedBox(width: 6),
           Text(
             'REAL (${(actualScore * 100).toStringAsFixed(0)}%)',
-            style: const TextStyle(color: SigapTheme.successColor, fontSize: 10, fontWeight: FontWeight.bold),
+            style: const TextStyle(
+              color: SigapTheme.successColor,
+              fontSize: 10,
+              fontWeight: FontWeight.bold,
+            ),
           ),
         ],
       );

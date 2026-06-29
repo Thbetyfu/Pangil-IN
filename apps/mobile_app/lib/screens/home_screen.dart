@@ -18,8 +18,10 @@ class HomeScreen extends StatefulWidget {
   State<HomeScreen> createState() => _HomeScreenState();
 }
 
-class _HomeScreenState extends State<HomeScreen> with SingleTickerProviderStateMixin {
+class _HomeScreenState extends State<HomeScreen>
+    with SingleTickerProviderStateMixin {
   late AnimationController _waveController;
+  DateTime? _volumeUpPressTime;
 
   // Mock list of nearby incidents in Bandung
   final List<Map<String, dynamic>> _mockNearbyIncidents = [
@@ -43,7 +45,7 @@ class _HomeScreenState extends State<HomeScreen> with SingleTickerProviderStateM
       'time': '30 menit yang lalu',
       'urgency': 'LOW',
       'is_spoofed': true,
-    }
+    },
   ];
 
   StreamSubscription<Map<String, dynamic>>? _alertSubscription;
@@ -98,10 +100,7 @@ class _HomeScreenState extends State<HomeScreen> with SingleTickerProviderStateM
                   gradient: LinearGradient(
                     begin: Alignment.topLeft,
                     end: Alignment.bottomRight,
-                    colors: [
-                      Color(0xFF0F1219),
-                      Color(0xFF1A1F30),
-                    ],
+                    colors: [Color(0xFF0F1219), Color(0xFF1A1F30)],
                   ),
                 ),
                 child: SafeArea(
@@ -131,52 +130,60 @@ class _HomeScreenState extends State<HomeScreen> with SingleTickerProviderStateM
                                     onTap: () {
                                       // Trigger confirmation with mock coordinates (Bandung Simpang Dago)
                                       context.read<SosBloc>().add(
-                                            TriggerSosConfirmationEvent(
-                                              latitude: -6.90344,
-                                              longitude: 107.61872,
-                                            ),
-                                          );
+                                        TriggerSosConfirmationEvent(
+                                          latitude: -6.90344,
+                                          longitude: 107.61872,
+                                        ),
+                                      );
                                     },
                                   ),
                                 ),
-                               const SizedBox(height: 20),
-                               Row(
-                                 children: [
-                                   Expanded(
-                                     child: _buildActionCard(
-                                       title: 'Lapor Visual',
-                                       subtitle: 'Unggah Bukti & AI',
-                                       icon: Icons.camera_alt_outlined,
-                                       color: const Color(0xFFFF1744),
-                                       onTap: () {
-                                         HapticFeedback.lightImpact();
-                                         Navigator.pushNamed(context, '/lapor');
-                                       },
-                                     ),
-                                   ),
-                                   const SizedBox(width: 12),
-                                   Expanded(
-                                     child: _buildActionCard(
-                                       title: 'Pantau Peta',
-                                       subtitle: 'OSM & Heatmap',
-                                       icon: Icons.map_outlined,
-                                       color: Colors.tealAccent,
-                                       onTap: () {
-                                         HapticFeedback.lightImpact();
-                                         Navigator.pushNamed(context, '/pantau');
-                                       },
-                                     ),
-                                   ),
-                                 ],
-                               ),
-                               const SizedBox(height: 20),
+                                const SizedBox(height: 20),
+                                Row(
+                                  children: [
+                                    Expanded(
+                                      child: _buildActionCard(
+                                        title: 'Lapor Visual',
+                                        subtitle: 'Unggah Bukti & AI',
+                                        icon: Icons.camera_alt_outlined,
+                                        color: const Color(0xFFFF1744),
+                                        onTap: () {
+                                          HapticFeedback.lightImpact();
+                                          Navigator.pushNamed(
+                                            context,
+                                            '/lapor',
+                                          );
+                                        },
+                                      ),
+                                    ),
+                                    const SizedBox(width: 12),
+                                    Expanded(
+                                      child: _buildActionCard(
+                                        title: 'Pantau Peta',
+                                        subtitle: 'OSM & Heatmap',
+                                        icon: Icons.map_outlined,
+                                        color: Colors.tealAccent,
+                                        onTap: () {
+                                          HapticFeedback.lightImpact();
+                                          Navigator.pushNamed(
+                                            context,
+                                            '/pantau',
+                                          );
+                                        },
+                                      ),
+                                    ),
+                                  ],
+                                ),
+                                const SizedBox(height: 20),
                                 _buildRidingModeCard(state.ridingMode),
                                 const SizedBox(height: 12),
                                 _buildFakeShutdownCard(state.fakeShutdown),
                                 const SizedBox(height: 24),
                                 _buildNearbyIncidentsHeader(),
                                 const SizedBox(height: 12),
-                                ..._mockNearbyIncidents.map((incident) => _buildIncidentCard(incident)),
+                                ..._mockNearbyIncidents.map(
+                                  (incident) => _buildIncidentCard(incident),
+                                ),
                                 const SizedBox(height: 40),
                               ],
                             ),
@@ -191,26 +198,65 @@ class _HomeScreenState extends State<HomeScreen> with SingleTickerProviderStateM
 
             // SOS Confirmation Screen Overlay
             if (state.status == SosStatus.confirming)
-              _buildConfirmationOverlay(state.countdown),
+              Positioned.fill(
+                child: _buildConfirmationOverlay(state.countdown),
+              ),
 
             // SOS Active Screen Overlay
-            if (state.status == SosStatus.sending || state.status == SosStatus.active)
-              _buildSosActiveOverlay(state.status),
+            if (state.status == SosStatus.sending ||
+                state.status == SosStatus.active)
+              Positioned.fill(child: _buildSosActiveOverlay(state.status)),
 
             // Fake Shutdown Screen Overlay (Stealth mode)
             if (state.fakeShutdown)
               Positioned.fill(
                 child: PopScope(
                   canPop: false,
-                  child: GestureDetector(
-                    onDoubleTap: () {
-                      HapticFeedback.heavyImpact();
-                      context.read<SosBloc>().add(ToggleFakeShutdownEvent(enable: false));
+                  child: Focus(
+                    autofocus: true,
+                    onKeyEvent: (FocusNode node, KeyEvent event) {
+                      if (state.fakeShutdownMethod == 'volume_chord' &&
+                          event is KeyDownEvent) {
+                        final key = event.logicalKey;
+                        if (key == LogicalKeyboardKey.audioVolumeUp) {
+                          _volumeUpPressTime = DateTime.now();
+                          return KeyEventResult.handled;
+                        } else if (key == LogicalKeyboardKey.audioVolumeDown) {
+                          if (_volumeUpPressTime != null &&
+                              DateTime.now().difference(_volumeUpPressTime!) <
+                                  const Duration(seconds: 2)) {
+                            _volumeUpPressTime = null;
+                            HapticFeedback.heavyImpact();
+                            context.read<SosBloc>().add(
+                              ToggleFakeShutdownEvent(enable: false),
+                            );
+                          }
+                          return KeyEventResult.handled;
+                        }
+                      }
+                      return KeyEventResult.ignored;
                     },
-                    child: Container(
-                      color: Colors.black,
-                      child: const Center(
-                        child: SizedBox.shrink(),
+                    child: GestureDetector(
+                      behavior: HitTestBehavior.opaque,
+                      onDoubleTap: state.fakeShutdownMethod == 'double_tap'
+                          ? () {
+                              HapticFeedback.heavyImpact();
+                              context.read<SosBloc>().add(
+                                ToggleFakeShutdownEvent(enable: false),
+                              );
+                            }
+                          : null,
+                      onLongPress: state.fakeShutdownMethod == 'long_press'
+                          ? () {
+                              HapticFeedback.heavyImpact();
+                              context.read<SosBloc>().add(
+                                ToggleFakeShutdownEvent(enable: false),
+                              );
+                            }
+                          : null,
+                      child: Container(
+                        color: Colors.black,
+                        child: const Center(child: SizedBox.shrink()),
                       ),
                     ),
                   ),
@@ -246,7 +292,9 @@ class _HomeScreenState extends State<HomeScreen> with SingleTickerProviderStateM
                 child: const CircleAvatar(
                   radius: 24,
                   backgroundColor: Color(0xFF1E2638),
-                  backgroundImage: NetworkImage('https://images.unsplash.com/photo-1535713875002-d1d0cf377fde?auto=format&fit=crop&w=150&q=80'),
+                  backgroundImage: NetworkImage(
+                    'https://images.unsplash.com/photo-1535713875002-d1d0cf377fde?auto=format&fit=crop&w=150&q=80',
+                  ),
                 ),
               ),
             ),
@@ -264,7 +312,11 @@ class _HomeScreenState extends State<HomeScreen> with SingleTickerProviderStateM
                 ),
                 Row(
                   children: [
-                    const Icon(Icons.verified_user_rounded, color: Colors.greenAccent, size: 14),
+                    const Icon(
+                      Icons.verified_user_rounded,
+                      color: Colors.greenAccent,
+                      size: 14,
+                    ),
                     const SizedBox(width: 4),
                     Text(
                       'Reputasi: 95.00 (Baik)',
@@ -283,16 +335,22 @@ class _HomeScreenState extends State<HomeScreen> with SingleTickerProviderStateM
         Container(
           padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
           decoration: BoxDecoration(
-            color: ridingMode ? const Color(0xFF0D47A1).withOpacity(0.4) : const Color(0xFF1E2638).withOpacity(0.6),
+            color: ridingMode
+                ? const Color(0xFF0D47A1).withOpacity(0.4)
+                : const Color(0xFF1E2638).withOpacity(0.6),
             borderRadius: BorderRadius.circular(20),
             border: Border.all(
-              color: ridingMode ? Colors.blueAccent.withOpacity(0.4) : Colors.white.withOpacity(0.1),
+              color: ridingMode
+                  ? Colors.blueAccent.withOpacity(0.4)
+                  : Colors.white.withOpacity(0.1),
             ),
           ),
           child: Row(
             children: [
               Icon(
-                ridingMode ? Icons.directions_bike_rounded : Icons.person_pin_circle_rounded,
+                ridingMode
+                    ? Icons.directions_bike_rounded
+                    : Icons.person_pin_circle_rounded,
                 color: ridingMode ? Colors.blueAccent : Colors.tealAccent,
                 size: 16,
               ),
@@ -389,16 +447,23 @@ class _HomeScreenState extends State<HomeScreen> with SingleTickerProviderStateM
                 children: [
                   Text(
                     title,
-                    style: const TextStyle(color: Colors.white, fontWeight: FontWeight.bold, fontSize: 12),
+                    style: const TextStyle(
+                      color: Colors.white,
+                      fontWeight: FontWeight.bold,
+                      fontSize: 12,
+                    ),
                   ),
                   const SizedBox(height: 2),
                   Text(
                     subtitle,
-                    style: TextStyle(color: Colors.white.withValues(alpha: 0.4), fontSize: 9),
+                    style: TextStyle(
+                      color: Colors.white.withValues(alpha: 0.4),
+                      fontSize: 9,
+                    ),
                   ),
                 ],
               ),
-            )
+            ),
           ],
         ),
       ),
@@ -411,7 +476,9 @@ class _HomeScreenState extends State<HomeScreen> with SingleTickerProviderStateM
       color: isEnabled ? Colors.blueAccent : Colors.white,
       padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
       border: Border.all(
-        color: isEnabled ? Colors.blueAccent.withOpacity(0.4) : Colors.white.withOpacity(0.06),
+        color: isEnabled
+            ? Colors.blueAccent.withOpacity(0.4)
+            : Colors.white.withOpacity(0.06),
         width: 1,
       ),
       child: Row(
@@ -419,7 +486,9 @@ class _HomeScreenState extends State<HomeScreen> with SingleTickerProviderStateM
           Container(
             padding: const EdgeInsets.all(10),
             decoration: BoxDecoration(
-              color: isEnabled ? Colors.blueAccent.withOpacity(0.2) : Colors.white.withOpacity(0.05),
+              color: isEnabled
+                  ? Colors.blueAccent.withOpacity(0.2)
+                  : Colors.white.withOpacity(0.05),
               shape: BoxShape.circle,
             ),
             child: Icon(
@@ -444,10 +513,7 @@ class _HomeScreenState extends State<HomeScreen> with SingleTickerProviderStateM
                 const SizedBox(height: 2),
                 Text(
                   'Mencegah false-trigger sensor G-force saat berkendara motor.',
-                  style: TextStyle(
-                    color: Colors.white60,
-                    fontSize: 11,
-                  ),
+                  style: TextStyle(color: Colors.white60, fontSize: 11),
                 ),
               ],
             ),
@@ -474,7 +540,9 @@ class _HomeScreenState extends State<HomeScreen> with SingleTickerProviderStateM
       color: isEnabled ? Colors.redAccent : Colors.white,
       padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
       border: Border.all(
-        color: isEnabled ? Colors.redAccent.withOpacity(0.4) : Colors.white.withOpacity(0.06),
+        color: isEnabled
+            ? Colors.redAccent.withOpacity(0.4)
+            : Colors.white.withOpacity(0.06),
         width: 1,
       ),
       child: Row(
@@ -482,7 +550,9 @@ class _HomeScreenState extends State<HomeScreen> with SingleTickerProviderStateM
           Container(
             padding: const EdgeInsets.all(10),
             decoration: BoxDecoration(
-              color: isEnabled ? Colors.redAccent.withOpacity(0.2) : Colors.white.withOpacity(0.05),
+              color: isEnabled
+                  ? Colors.redAccent.withOpacity(0.2)
+                  : Colors.white.withOpacity(0.05),
               shape: BoxShape.circle,
             ),
             child: const Icon(
@@ -523,7 +593,9 @@ class _HomeScreenState extends State<HomeScreen> with SingleTickerProviderStateM
             inactiveTrackColor: Colors.white10,
             onChanged: (value) {
               HapticFeedback.lightImpact();
-              context.read<SosBloc>().add(ToggleFakeShutdownEvent(enable: value));
+              context.read<SosBloc>().add(
+                ToggleFakeShutdownEvent(enable: value),
+              );
             },
           ),
         ],
@@ -613,7 +685,10 @@ class _HomeScreenState extends State<HomeScreen> with SingleTickerProviderStateM
                         ),
                       ),
                       Container(
-                        padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
+                        padding: const EdgeInsets.symmetric(
+                          horizontal: 8,
+                          vertical: 3,
+                        ),
                         decoration: BoxDecoration(
                           color: badgeColor.withOpacity(0.2),
                           borderRadius: BorderRadius.circular(10),
@@ -685,11 +760,16 @@ class _HomeScreenState extends State<HomeScreen> with SingleTickerProviderStateM
                 Column(
                   children: [
                     Container(
-                      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+                      padding: const EdgeInsets.symmetric(
+                        horizontal: 16,
+                        vertical: 8,
+                      ),
                       decoration: BoxDecoration(
                         color: const Color(0xFFFF1744).withOpacity(0.2),
                         borderRadius: BorderRadius.circular(20),
-                        border: Border.all(color: const Color(0xFFFF1744).withOpacity(0.5)),
+                        border: Border.all(
+                          color: const Color(0xFFFF1744).withOpacity(0.5),
+                        ),
                       ),
                       child: const Text(
                         'PEMICUAN SOS TERDETEKSI',
@@ -728,7 +808,9 @@ class _HomeScreenState extends State<HomeScreen> with SingleTickerProviderStateM
                             value: countdown / 60.0,
                             strokeWidth: 6,
                             backgroundColor: Colors.white10,
-                            valueColor: const AlwaysStoppedAnimation<Color>(Color(0xFFFF1744)),
+                            valueColor: const AlwaysStoppedAnimation<Color>(
+                              Color(0xFFFF1744),
+                            ),
                           ),
                         ),
                         Column(
@@ -761,10 +843,7 @@ class _HomeScreenState extends State<HomeScreen> with SingleTickerProviderStateM
                     const Text(
                       'Jika tidak ada tindakan dalam waktu 1 menit,\nsinyal SOS otomatis dibatalkan.',
                       textAlign: TextAlign.center,
-                      style: TextStyle(
-                        color: Colors.white60,
-                        fontSize: 12,
-                      ),
+                      style: TextStyle(color: Colors.white60, fontSize: 12),
                     ),
                   ],
                 ),
@@ -773,54 +852,63 @@ class _HomeScreenState extends State<HomeScreen> with SingleTickerProviderStateM
                 Column(
                   children: [
                     // Vertical Slider (High Fidelity drag)
-                    Container(
-                      width: 80,
-                      height: 220,
-                      decoration: BoxDecoration(
-                        color: Colors.white.withOpacity(0.06),
-                        borderRadius: BorderRadius.circular(40),
-                        border: Border.all(color: Colors.white.withOpacity(0.1)),
-                      ),
-                      child: Stack(
-                        alignment: Alignment.bottomCenter,
-                        children: [
-                          // Background tracks
-                          Positioned(
-                            top: 20,
-                            child: Icon(
-                              Icons.keyboard_double_arrow_up_rounded,
-                              color: const Color(0xFFFF1744).withOpacity(0.3 + (_dragValue * 0.7)),
-                              size: 28,
+                    GestureDetector(
+                      behavior: HitTestBehavior.opaque,
+                      onVerticalDragUpdate: (details) {
+                        final delta = details.primaryDelta ?? 0.0;
+                        // Convert drag coordinates to 0.0 - 1.0 scale
+                        setState(() {
+                          _dragValue = max(
+                            0.0,
+                            min(1.0, _dragValue - (delta / 140.0)),
+                          );
+                        });
+                        if (_dragValue >= 0.95) {
+                          // Drag successfully confirmed
+                          HapticFeedback.vibrate();
+                          context.read<SosBloc>().add(
+                            ConfirmSosEvent(
+                              description:
+                                  'Pemicuan SOS Warga (Dikonfirmasi via Slider)',
                             ),
+                          );
+                          _dragValue = 0.0; // Reset
+                        }
+                      },
+                      onVerticalDragEnd: (_) {
+                        if (_dragValue < 0.95) {
+                          setState(() {
+                            _dragValue = 0.0; // Snap back
+                          });
+                        }
+                      },
+                      child: Container(
+                        width: 80,
+                        height: 220,
+                        decoration: BoxDecoration(
+                          color: Colors.white.withOpacity(0.06),
+                          borderRadius: BorderRadius.circular(40),
+                          border: Border.all(
+                            color: Colors.white.withOpacity(0.1),
                           ),
-                          // Draggable handle
-                          Positioned(
-                            bottom: _dragValue * 140,
-                            child: GestureDetector(
-                              onVerticalDragUpdate: (details) {
-                                final delta = details.primaryDelta ?? 0.0;
-                                // Convert drag coordinates to 0.0 - 1.0 scale
-                                setState(() {
-                                  _dragValue = max(0.0, min(1.0, _dragValue - (delta / 140.0)));
-                                });
-                                if (_dragValue >= 0.95) {
-                                  // Drag successfully confirmed
-                                  HapticFeedback.vibrate();
-                                  context.read<SosBloc>().add(
-                                        ConfirmSosEvent(
-                                          description: 'Pemicuan SOS Warga (Dikonfirmasi via Slider)',
-                                        ),
-                                      );
-                                  _dragValue = 0.0; // Reset
-                                }
-                              },
-                              onVerticalDragEnd: (_) {
-                                if (_dragValue < 0.95) {
-                                  setState(() {
-                                    _dragValue = 0.0; // Snap back
-                                  });
-                                }
-                              },
+                        ),
+                        child: Stack(
+                          alignment: Alignment.bottomCenter,
+                          children: [
+                            // Background tracks
+                            Positioned(
+                              top: 20,
+                              child: Icon(
+                                Icons.keyboard_double_arrow_up_rounded,
+                                color: const Color(
+                                  0xFFFF1744,
+                                ).withOpacity(0.3 + (_dragValue * 0.7)),
+                                size: 28,
+                              ),
+                            ),
+                            // Draggable handle (Visual only)
+                            Positioned(
+                              bottom: _dragValue * 140,
                               child: Container(
                                 width: 68,
                                 height: 68,
@@ -839,14 +927,18 @@ class _HomeScreenState extends State<HomeScreen> with SingleTickerProviderStateM
                                       color: Colors.redAccent,
                                       blurRadius: 15,
                                       spreadRadius: 1,
-                                    )
+                                    ),
                                   ],
                                 ),
-                                child: const Icon(Icons.swipe_up_rounded, color: Colors.white, size: 28),
+                                child: const Icon(
+                                  Icons.swipe_up_rounded,
+                                  color: Colors.white,
+                                  size: 28,
+                                ),
                               ),
                             ),
-                          ),
-                        ],
+                          ],
+                        ),
                       ),
                     ),
                     const SizedBox(height: 12),
@@ -862,7 +954,10 @@ class _HomeScreenState extends State<HomeScreen> with SingleTickerProviderStateM
                     // Cancel Button
                     TextButton(
                       style: TextButton.styleFrom(
-                        padding: const EdgeInsets.symmetric(horizontal: 32, vertical: 12),
+                        padding: const EdgeInsets.symmetric(
+                          horizontal: 32,
+                          vertical: 12,
+                        ),
                         backgroundColor: Colors.white.withOpacity(0.08),
                         shape: RoundedRectangleBorder(
                           borderRadius: BorderRadius.circular(30),
@@ -896,7 +991,9 @@ class _HomeScreenState extends State<HomeScreen> with SingleTickerProviderStateM
 
   Widget _buildSosActiveOverlay(SosStatus status) {
     return Material(
-      color: const Color(0xFF8B0000).withOpacity(0.96), // Dark Red/Crimson threat state
+      color: const Color(
+        0xFF8B0000,
+      ).withOpacity(0.96), // Dark Red/Crimson threat state
       child: SafeArea(
         child: Column(
           mainAxisAlignment: MainAxisAlignment.spaceBetween,
@@ -923,7 +1020,10 @@ class _HomeScreenState extends State<HomeScreen> with SingleTickerProviderStateM
                 ),
                 const SizedBox(height: 8),
                 Container(
-                  padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 6),
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: 14,
+                    vertical: 6,
+                  ),
                   decoration: BoxDecoration(
                     color: Colors.black.withOpacity(0.3),
                     borderRadius: BorderRadius.circular(20),
@@ -965,7 +1065,8 @@ class _HomeScreenState extends State<HomeScreen> with SingleTickerProviderStateM
                       return AnimatedBuilder(
                         animation: _waveController,
                         builder: (context, child) {
-                          final progress = (_waveController.value + (index / 3.0)) % 1.0;
+                          final progress =
+                              (_waveController.value + (index / 3.0)) % 1.0;
                           final size = 120.0 + (progress * 130.0);
                           final opacity = 0.45 * (1.0 - progress);
                           return Container(
@@ -989,7 +1090,11 @@ class _HomeScreenState extends State<HomeScreen> with SingleTickerProviderStateM
                         shape: BoxShape.circle,
                         color: Colors.white,
                         boxShadow: [
-                          BoxShadow(color: Colors.black26, blurRadius: 20, spreadRadius: 2),
+                          BoxShadow(
+                            color: Colors.black26,
+                            blurRadius: 20,
+                            spreadRadius: 2,
+                          ),
                         ],
                       ),
                       child: const Icon(
@@ -1013,10 +1118,7 @@ class _HomeScreenState extends State<HomeScreen> with SingleTickerProviderStateM
                 const SizedBox(height: 4),
                 const Text(
                   'Mengirim data suara & video ke komando polisi...',
-                  style: TextStyle(
-                    color: Colors.white70,
-                    fontSize: 12,
-                  ),
+                  style: TextStyle(color: Colors.white70, fontSize: 12),
                 ),
               ],
             ),
@@ -1056,7 +1158,10 @@ class _HomeScreenState extends State<HomeScreen> with SingleTickerProviderStateM
                 const SizedBox(height: 20),
                 TextButton(
                   style: TextButton.styleFrom(
-                    padding: const EdgeInsets.symmetric(horizontal: 36, vertical: 14),
+                    padding: const EdgeInsets.symmetric(
+                      horizontal: 36,
+                      vertical: 14,
+                    ),
                     backgroundColor: Colors.white,
                     shape: RoundedRectangleBorder(
                       borderRadius: BorderRadius.circular(30),
@@ -1084,7 +1189,10 @@ class _HomeScreenState extends State<HomeScreen> with SingleTickerProviderStateM
     );
   }
 
-  void _showProximityAlertDialog(BuildContext context, Map<String, dynamic> alert) {
+  void _showProximityAlertDialog(
+    BuildContext context,
+    Map<String, dynamic> alert,
+  ) {
     showDialog(
       context: context,
       barrierDismissible: true,
@@ -1140,7 +1248,8 @@ class _HomeScreenState extends State<HomeScreen> with SingleTickerProviderStateM
                         const SizedBox(height: 12),
                         // Description
                         Text(
-                          alert['message'] ?? 'Sinyal bahaya terdeteksi di sekitar posisi Anda.',
+                          alert['message'] ??
+                              'Sinyal bahaya terdeteksi di sekitar posisi Anda.',
                           style: const TextStyle(
                             fontSize: 13,
                             color: Colors.white,
@@ -1155,14 +1264,22 @@ class _HomeScreenState extends State<HomeScreen> with SingleTickerProviderStateM
                             Expanded(
                               child: TextButton(
                                 style: TextButton.styleFrom(
-                                  backgroundColor: Colors.white.withOpacity(0.04),
+                                  backgroundColor: Colors.white.withOpacity(
+                                    0.04,
+                                  ),
                                   foregroundColor: Colors.white70,
                                   shape: RoundedRectangleBorder(
                                     borderRadius: BorderRadius.circular(8),
                                   ),
                                 ),
                                 onPressed: () => Navigator.pop(context),
-                                child: const Text('ABAIKAN', style: TextStyle(fontWeight: FontWeight.bold, fontSize: 12)),
+                                child: const Text(
+                                  'ABAIKAN',
+                                  style: TextStyle(
+                                    fontWeight: FontWeight.bold,
+                                    fontSize: 12,
+                                  ),
+                                ),
                               ),
                             ),
                             const SizedBox(width: 12),
@@ -1179,11 +1296,17 @@ class _HomeScreenState extends State<HomeScreen> with SingleTickerProviderStateM
                                   Navigator.pop(context);
                                   Navigator.pushNamed(context, '/pantau');
                                 },
-                                child: const Text('LIHAT PETA', style: TextStyle(fontWeight: FontWeight.bold, fontSize: 12)),
+                                child: const Text(
+                                  'LIHAT PETA',
+                                  style: TextStyle(
+                                    fontWeight: FontWeight.bold,
+                                    fontSize: 12,
+                                  ),
+                                ),
                               ),
                             ),
                           ],
-                        )
+                        ),
                       ],
                     ),
                   ),

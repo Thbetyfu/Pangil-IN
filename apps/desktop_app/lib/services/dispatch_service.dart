@@ -36,9 +36,7 @@ class DispatchService {
     if (_token == null) throw Exception('Not authenticated');
     final response = await http.get(
       Uri.parse('$baseUrl/api/reports'),
-      headers: {
-        'Authorization': 'Bearer $_token',
-      },
+      headers: {'Authorization': 'Bearer $_token'},
     );
     final data = jsonDecode(response.body);
     if (response.statusCode == 200 && data['status'] == 'success') {
@@ -52,9 +50,7 @@ class DispatchService {
     if (_token == null) throw Exception('Not authenticated');
     final response = await http.get(
       Uri.parse('$baseUrl/api/cctv/$cameraId/alerts'),
-      headers: {
-        'Authorization': 'Bearer $_token',
-      },
+      headers: {'Authorization': 'Bearer $_token'},
     );
     final data = jsonDecode(response.body);
     if (response.statusCode == 200 && data['status'] == 'success') {
@@ -64,7 +60,10 @@ class DispatchService {
   }
 
   // Get AI Escape Prediction (F-08 GNN Escape routes)
-  Future<List<dynamic>> getEscapePrediction(String startNode, String headingNode) async {
+  Future<List<dynamic>> getEscapePrediction(
+    String startNode,
+    String headingNode,
+  ) async {
     try {
       final response = await http.post(
         Uri.parse('http://localhost:3002/ai/escape-prediction'),
@@ -86,7 +85,10 @@ class DispatchService {
   }
 
   // Get AI GNN Re-ID Tracking
-  Future<List<dynamic>> getReidTracking(String startNode, String suspectFeatures) async {
+  Future<List<dynamic>> getReidTracking(
+    String startNode,
+    String suspectFeatures,
+  ) async {
     try {
       final response = await http.post(
         Uri.parse('http://localhost:3002/ai/reid-tracking'),
@@ -111,9 +113,7 @@ class DispatchService {
     if (_token == null) throw Exception('Not authenticated');
     final response = await http.get(
       Uri.parse('$baseUrl/api/cctv'),
-      headers: {
-        'Authorization': 'Bearer $_token',
-      },
+      headers: {'Authorization': 'Bearer $_token'},
     );
     final data = jsonDecode(response.body);
     if (response.statusCode == 200 && data['status'] == 'success') {
@@ -127,9 +127,7 @@ class DispatchService {
     if (_token == null) throw Exception('Not authenticated');
     final response = await http.get(
       Uri.parse('$baseUrl/api/patrol'),
-      headers: {
-        'Authorization': 'Bearer $_token',
-      },
+      headers: {'Authorization': 'Bearer $_token'},
     );
     final data = jsonDecode(response.body);
     if (response.statusCode == 200 && data['status'] == 'success') {
@@ -139,7 +137,10 @@ class DispatchService {
   }
 
   // Update CCTV FPS Mode
-  Future<Map<String, dynamic>> updateCctvFps(String cameraId, String fpsMode) async {
+  Future<Map<String, dynamic>> updateCctvFps(
+    String cameraId,
+    String fpsMode,
+  ) async {
     if (_token == null) throw Exception('Not authenticated');
     final response = await http.patch(
       Uri.parse('$baseUrl/api/cctv/$cameraId/fps'),
@@ -147,15 +148,16 @@ class DispatchService {
         'Content-Type': 'application/json',
         'Authorization': 'Bearer $_token',
       },
-      body: jsonEncode({
-        'fps_mode': fpsMode,
-      }),
+      body: jsonEncode({'fps_mode': fpsMode}),
     );
     return jsonDecode(response.body);
   }
 
   // Dispatch / Assign Patrol Unit to Report
-  Future<Map<String, dynamic>> assignPatrolUnit(String reportId, String patrolUnitId) async {
+  Future<Map<String, dynamic>> assignPatrolUnit(
+    String reportId,
+    String patrolUnitId,
+  ) async {
     if (_token == null) throw Exception('Not authenticated');
     final response = await http.patch(
       Uri.parse('$baseUrl/api/reports/$reportId/assign'),
@@ -163,9 +165,7 @@ class DispatchService {
         'Content-Type': 'application/json',
         'Authorization': 'Bearer $_token',
       },
-      body: jsonEncode({
-        'assigned_unit_id': patrolUnitId,
-      }),
+      body: jsonEncode({'assigned_unit_id': patrolUnitId}),
     );
     return jsonDecode(response.body);
   }
@@ -174,20 +174,20 @@ class DispatchService {
   void connectWebSocket() {
     if (_token == null || _userId == null) return;
 
-    _socket = io.io(baseUrl, io.OptionBuilder()
-      .setTransports(['websocket'])
-      .disableAutoConnect()
-      .build());
+    _socket = io.io(
+      baseUrl,
+      io.OptionBuilder()
+          .setTransports(['websocket'])
+          .disableAutoConnect()
+          .build(),
+    );
 
     _socket!.connect();
 
     _socket!.onConnect((_) {
       print('Police dispatch client connected to Socket.io');
       // Register with role and user ID
-      _socket!.emit('register', {
-        'userId': _userId,
-        'role': 'POLICE_OPERATOR',
-      });
+      _socket!.emit('register', {'userId': _userId, 'role': 'POLICE_OPERATOR'});
     });
 
     // Subscriptions
@@ -208,7 +208,8 @@ class DispatchService {
 
     _socket!.on('cctv_fps_changed', (data) {
       print('SOCKET: CCTV FPS changed alert received');
-      if (onCctvFpsChanged != null) onCctvFpsChanged!(Map<String, dynamic>.from(data));
+      if (onCctvFpsChanged != null)
+        onCctvFpsChanged!(Map<String, dynamic>.from(data));
     });
 
     _socket!.onDisconnect((_) => print('Police dispatch client disconnected'));

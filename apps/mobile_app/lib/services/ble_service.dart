@@ -69,7 +69,9 @@ class BleService {
       // Get current GPS position of relayer using apiService abstraction (PRD F-03)
       final Position position = await apiService.getCurrentPosition();
 
-      print('BLE MESH: [RELAY] Forwarding beacon $beaconId position (${position.latitude}, ${position.longitude}) to server...');
+      print(
+        'BLE MESH: [RELAY] Forwarding beacon $beaconId position (${position.latitude}, ${position.longitude}) to server...',
+      );
       await apiService.sendBleRelay(
         beaconId: beaconId,
         latitude: position.latitude,

@@ -18,8 +18,11 @@ class MapScreen extends StatefulWidget {
 
 class _MapScreenState extends State<MapScreen> {
   final MapController _mapController = MapController();
-  
-  LatLng _userPosition = const LatLng(-6.8915, 107.6161); // Default Simpang Dago, Bandung
+
+  LatLng _userPosition = const LatLng(
+    -6.8915,
+    107.6161,
+  ); // Default Simpang Dago, Bandung
   bool _isLoading = true;
   bool _isLocatingUser = false;
   List<Map<String, dynamic>> _reports = [];
@@ -35,7 +38,7 @@ class _MapScreenState extends State<MapScreen> {
   Future<void> _initMapAndData() async {
     await _getUserLocation();
     await _fetchNearbyReports();
-    
+
     // Offline caching & Sync (PRD Database Offline Cache)
     if (mounted) {
       final database = context.read<LocalDatabase>();
@@ -122,8 +125,11 @@ class _MapScreenState extends State<MapScreen> {
   Future<void> _fetchNearbyReports() async {
     try {
       final apiService = context.read<ApiService>();
-      final result = await apiService.getNearbyReports(_userPosition.latitude, _userPosition.longitude);
-      
+      final result = await apiService.getNearbyReports(
+        _userPosition.latitude,
+        _userPosition.longitude,
+      );
+
       if (result['status'] == 'success') {
         final List<dynamic> reportsList = result['data']['reports'] ?? [];
         setState(() {
@@ -180,11 +186,15 @@ class _MapScreenState extends State<MapScreen> {
                   Container(
                     padding: const EdgeInsets.all(8),
                     decoration: BoxDecoration(
-                      color: isVoice ? const Color(0xFFFF1744).withValues(alpha: 0.15) : Colors.amber.withValues(alpha: 0.15),
+                      color: isVoice
+                          ? const Color(0xFFFF1744).withValues(alpha: 0.15)
+                          : Colors.amber.withValues(alpha: 0.15),
                       shape: BoxShape.circle,
                     ),
                     child: Icon(
-                      isVoice ? Icons.notifications_active_rounded : Icons.photo_library_rounded,
+                      isVoice
+                          ? Icons.notifications_active_rounded
+                          : Icons.photo_library_rounded,
                       color: isVoice ? const Color(0xFFFF1744) : Colors.amber,
                       size: 18,
                     ),
@@ -196,18 +206,28 @@ class _MapScreenState extends State<MapScreen> {
                       children: [
                         Text(
                           isVoice ? 'SOS SUARA AKTIF' : 'LAPORAN VISUAL WARGA',
-                          style: const TextStyle(color: Colors.white, fontWeight: FontWeight.bold, fontSize: 13),
+                          style: const TextStyle(
+                            color: Colors.white,
+                            fontWeight: FontWeight.bold,
+                            fontSize: 13,
+                          ),
                         ),
                         const SizedBox(height: 2),
                         Text(
                           'Jarak dari posisi Anda: $distanceStr',
-                          style: TextStyle(color: Colors.white.withValues(alpha: 0.5), fontSize: 10),
+                          style: TextStyle(
+                            color: Colors.white.withValues(alpha: 0.5),
+                            fontSize: 10,
+                          ),
                         ),
                       ],
                     ),
                   ),
                   Container(
-                    padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                    padding: const EdgeInsets.symmetric(
+                      horizontal: 8,
+                      vertical: 4,
+                    ),
                     decoration: BoxDecoration(
                       color: (report['urgency'] == 'HIGH' || isVoice)
                           ? const Color(0xFFFF1744).withValues(alpha: 0.12)
@@ -222,7 +242,7 @@ class _MapScreenState extends State<MapScreen> {
                         fontWeight: FontWeight.bold,
                       ),
                     ),
-                  )
+                  ),
                 ],
               ),
               const Divider(color: Colors.white10, height: 24),
@@ -230,12 +250,19 @@ class _MapScreenState extends State<MapScreen> {
               // Description
               Text(
                 'Deskripsi Kejadian:',
-                style: TextStyle(color: Colors.white.withValues(alpha: 0.4), fontSize: 10),
+                style: TextStyle(
+                  color: Colors.white.withValues(alpha: 0.4),
+                  fontSize: 10,
+                ),
               ),
               const SizedBox(height: 6),
               Text(
                 report['description'] ?? 'Tidak ada keterangan tambahan.',
-                style: const TextStyle(color: Colors.white, fontSize: 12, height: 1.4),
+                style: const TextStyle(
+                  color: Colors.white,
+                  fontSize: 12,
+                  height: 1.4,
+                ),
               ),
               const SizedBox(height: 20),
 
@@ -246,11 +273,16 @@ class _MapScreenState extends State<MapScreen> {
                     child: OutlinedButton(
                       style: OutlinedButton.styleFrom(
                         side: const BorderSide(color: Colors.white24),
-                        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
+                        shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(10),
+                        ),
                         padding: const EdgeInsets.symmetric(vertical: 12),
                       ),
                       onPressed: () => Navigator.pop(context),
-                      child: const Text('TUTUP', style: TextStyle(color: Colors.white70, fontSize: 11)),
+                      child: const Text(
+                        'TUTUP',
+                        style: TextStyle(color: Colors.white70, fontSize: 11),
+                      ),
                     ),
                   ),
                   const SizedBox(width: 12),
@@ -260,21 +292,33 @@ class _MapScreenState extends State<MapScreen> {
                         backgroundColor: const Color(0xFFFF1744),
                         foregroundColor: Colors.white,
                         elevation: 3,
-                        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
+                        shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(10),
+                        ),
                         padding: const EdgeInsets.symmetric(vertical: 12),
                       ),
                       onPressed: () {
                         HapticFeedback.mediumImpact();
                         Navigator.pop(context);
                         ScaffoldMessenger.of(context).showSnackBar(
-                          const SnackBar(content: Text('Rute aman sedang dikalkulasikan ke SIGAP Police Map...')),
+                          const SnackBar(
+                            content: Text(
+                              'Rute aman sedang dikalkulasikan ke SIGAP Police Map...',
+                            ),
+                          ),
                         );
                       },
-                      child: const Text('RUTE AMAN', style: TextStyle(fontSize: 11, fontWeight: FontWeight.bold)),
+                      child: const Text(
+                        'RUTE AMAN',
+                        style: TextStyle(
+                          fontSize: 11,
+                          fontWeight: FontWeight.bold,
+                        ),
+                      ),
                     ),
                   ),
                 ],
-              )
+              ),
             ],
           ),
         ),
@@ -307,7 +351,10 @@ class _MapScreenState extends State<MapScreen> {
               decoration: BoxDecoration(
                 color: Colors.cyanAccent.withValues(alpha: 0.15),
                 shape: BoxShape.circle,
-                border: Border.all(color: Colors.cyanAccent.withValues(alpha: 0.3), width: 1.5),
+                border: Border.all(
+                  color: Colors.cyanAccent.withValues(alpha: 0.3),
+                  width: 1.5,
+                ),
               ),
             ),
             // Solid center circle
@@ -318,7 +365,11 @@ class _MapScreenState extends State<MapScreen> {
                 color: Colors.cyanAccent,
                 shape: BoxShape.circle,
                 boxShadow: [
-                  BoxShadow(color: Colors.cyanAccent, blurRadius: 8, spreadRadius: 1),
+                  BoxShadow(
+                    color: Colors.cyanAccent,
+                    blurRadius: 8,
+                    spreadRadius: 1,
+                  ),
                 ],
               ),
             ),
@@ -332,7 +383,7 @@ class _MapScreenState extends State<MapScreen> {
       final double lat = double.parse(report['latitude'].toString());
       final double lng = double.parse(report['longitude'].toString());
       final LatLng point = LatLng(lat, lng);
-      
+
       final bool isVoice = report['type'] == 'SOS_VOICE';
 
       mapMarkers.add(
@@ -353,20 +404,24 @@ class _MapScreenState extends State<MapScreen> {
                   width: 30,
                   height: 30,
                   decoration: BoxDecoration(
-                    color: isVoice ? const Color(0xFFFF1744).withValues(alpha: 0.2) : Colors.amber.withValues(alpha: 0.2),
+                    color: isVoice
+                        ? const Color(0xFFFF1744).withValues(alpha: 0.2)
+                        : Colors.amber.withValues(alpha: 0.2),
                     shape: BoxShape.circle,
                     boxShadow: [
                       BoxShadow(
                         color: isVoice ? const Color(0xFFFF1744) : Colors.amber,
                         blurRadius: 10,
                         spreadRadius: 1,
-                      )
+                      ),
                     ],
                   ),
                 ),
                 // Inner Icon
                 Icon(
-                  isVoice ? Icons.notifications_active_rounded : Icons.warning_amber_rounded,
+                  isVoice
+                      ? Icons.notifications_active_rounded
+                      : Icons.warning_amber_rounded,
                   color: isVoice ? Colors.white : Colors.black87,
                   size: 16,
                 ),
@@ -385,7 +440,9 @@ class _MapScreenState extends State<MapScreen> {
           _isLoading
               ? const Center(
                   child: CircularProgressIndicator(
-                    valueColor: AlwaysStoppedAnimation<Color>(Color(0xFFFF1744)),
+                    valueColor: AlwaysStoppedAnimation<Color>(
+                      Color(0xFFFF1744),
+                    ),
                   ),
                 )
               : FlutterMap(
@@ -399,11 +456,12 @@ class _MapScreenState extends State<MapScreen> {
                   children: [
                     // A. Base map tile layer (CartoDB Dark Matter style map tile provider)
                     TileLayer(
-                      urlTemplate: 'https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png',
+                      urlTemplate:
+                          'https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png',
                       subdomains: const ['a', 'b', 'c', 'd'],
                       userAgentPackageName: 'com.panggilin.app',
                     ),
-                    
+
                     // B. Heatmap/Red zones layers (Circles with translucent red denoting high crime zones) (PRD Database Offline Cache)
                     CircleLayer(
                       circles: _heatmapPoints.map((point) {
@@ -418,7 +476,9 @@ class _MapScreenState extends State<MapScreen> {
                               : Colors.red.withOpacity(0.28),
                           borderStrokeWidth: 1.5,
                           useRadiusInMeter: true,
-                          radius: point.intensity * 80.0, // Dynamic radius based on intensity
+                          radius:
+                              point.intensity *
+                              80.0, // Dynamic radius based on intensity
                         );
                       }).toList(),
                     ),
@@ -434,7 +494,12 @@ class _MapScreenState extends State<MapScreen> {
             left: 0,
             right: 0,
             child: Container(
-              padding: const EdgeInsets.only(top: 50, left: 16, right: 16, bottom: 20),
+              padding: const EdgeInsets.only(
+                top: 50,
+                left: 16,
+                right: 16,
+                bottom: 20,
+              ),
               decoration: BoxDecoration(
                 gradient: LinearGradient(
                   begin: Alignment.topCenter,
@@ -449,7 +514,11 @@ class _MapScreenState extends State<MapScreen> {
                     child: Container(
                       color: Colors.black54,
                       child: IconButton(
-                        icon: const Icon(Icons.arrow_back_ios_new_rounded, color: Colors.white, size: 18),
+                        icon: const Icon(
+                          Icons.arrow_back_ios_new_rounded,
+                          color: Colors.white,
+                          size: 18,
+                        ),
                         onPressed: () {
                           HapticFeedback.lightImpact();
                           Navigator.pop(context);
@@ -463,7 +532,12 @@ class _MapScreenState extends State<MapScreen> {
                     children: [
                       Text(
                         'PETA ZONE RAWAN BEGAL',
-                        style: TextStyle(color: Colors.white, fontWeight: FontWeight.w900, fontSize: 14, letterSpacing: 0.8),
+                        style: TextStyle(
+                          color: Colors.white,
+                          fontWeight: FontWeight.w900,
+                          fontSize: 14,
+                          letterSpacing: 0.8,
+                        ),
                       ),
                       SizedBox(height: 2),
                       Text(
@@ -478,7 +552,11 @@ class _MapScreenState extends State<MapScreen> {
                     child: Container(
                       color: Colors.black54,
                       child: IconButton(
-                        icon: const Icon(Icons.refresh_rounded, color: Colors.tealAccent, size: 20),
+                        icon: const Icon(
+                          Icons.refresh_rounded,
+                          color: Colors.tealAccent,
+                          size: 20,
+                        ),
                         onPressed: () {
                           HapticFeedback.lightImpact();
                           _fetchNearbyReports();
@@ -501,7 +579,9 @@ class _MapScreenState extends State<MapScreen> {
                   heroTag: 'gps_fab',
                   backgroundColor: const Color(0xFF1E2638),
                   foregroundColor: Colors.tealAccent,
-                  shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+                  shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(12),
+                  ),
                   mini: true,
                   onPressed: _isLocatingUser ? null : _getUserLocation,
                   child: _isLocatingUser
@@ -510,7 +590,9 @@ class _MapScreenState extends State<MapScreen> {
                           height: 18,
                           child: CircularProgressIndicator(
                             strokeWidth: 2,
-                            valueColor: AlwaysStoppedAnimation<Color>(Colors.tealAccent),
+                            valueColor: AlwaysStoppedAnimation<Color>(
+                              Colors.tealAccent,
+                            ),
                           ),
                         )
                       : const Icon(Icons.gps_fixed_rounded, size: 18),

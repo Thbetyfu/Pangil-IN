@@ -16,7 +16,8 @@ class MockApiServiceForBle extends ApiService {
   double? lastRelayedLatitude;
   double? lastRelayedLongitude;
 
-  final StreamController<UserAccelerometerEvent> accelerometerController = StreamController<UserAccelerometerEvent>.broadcast();
+  final StreamController<UserAccelerometerEvent> accelerometerController =
+      StreamController<UserAccelerometerEvent>.broadcast();
 
   @override
   Stream<UserAccelerometerEvent> getAccelerometerEvents() {
@@ -33,10 +34,8 @@ class MockApiServiceForBle extends ApiService {
     return {
       'status': 'success',
       'data': {
-        'report': {
-          'id': 'mock-sos-report-11111',
-        }
-      }
+        'report': {'id': 'mock-sos-report-11111'},
+      },
     };
   }
 
@@ -98,42 +97,53 @@ void main() {
     expect(bleService.isAdvertising, isFalse);
   });
 
-  test('BleService simulateBeaconFound retrieves location and triggers sendBleRelay API', () async {
-    await bleService.simulateBeaconFound('victim-beacon-xyz');
-    expect(mockApiService.lastRelayedBeaconId, 'victim-beacon-xyz');
-    expect(mockApiService.lastRelayedLatitude, -6.90344);
-    expect(mockApiService.lastRelayedLongitude, 107.61872);
-  });
+  test(
+    'BleService simulateBeaconFound retrieves location and triggers sendBleRelay API',
+    () async {
+      await bleService.simulateBeaconFound('victim-beacon-xyz');
+      expect(mockApiService.lastRelayedBeaconId, 'victim-beacon-xyz');
+      expect(mockApiService.lastRelayedLatitude, -6.90344);
+      expect(mockApiService.lastRelayedLongitude, 107.61872);
+    },
+  );
 
-  test('SosBloc triggers BLE advertising when ConfirmSosEvent succeeds', () async {
-    // Dispatch events to trigger SOS activation
-    sosBloc.add(TriggerSosConfirmationEvent(latitude: -6.90344, longitude: 107.61872));
-    sosBloc.add(ConfirmSosEvent());
+  test(
+    'SosBloc triggers BLE advertising when ConfirmSosEvent succeeds',
+    () async {
+      // Dispatch events to trigger SOS activation
+      sosBloc.add(
+        TriggerSosConfirmationEvent(latitude: -6.90344, longitude: 107.61872),
+      );
+      sosBloc.add(ConfirmSosEvent());
 
-    // Expecting transition to active
-    await expectLater(
-      sosBloc.stream,
-      emitsThrough(
-        predicate<SosState>((state) =>
-            state.status == SosStatus.active && state.reportId == 'mock-sos-report-11111'),
-      ),
-    );
+      // Expecting transition to active
+      await expectLater(
+        sosBloc.stream,
+        emitsThrough(
+          predicate<SosState>(
+            (state) =>
+                state.status == SosStatus.active &&
+                state.reportId == 'mock-sos-report-11111',
+          ),
+        ),
+      );
 
-    // Verify BLE advertiser is started
-    expect(bleService.isAdvertising, isTrue);
+      // Verify BLE advertiser is started
+      expect(bleService.isAdvertising, isTrue);
 
-    // Cancel SOS
-    sosBloc.add(CancelSosEvent());
+      // Cancel SOS
+      sosBloc.add(CancelSosEvent());
 
-    // Expecting transition back to idle or cancelled
-    await expectLater(
-      sosBloc.stream,
-      emitsThrough(
-        predicate<SosState>((state) => state.status == SosStatus.cancelled),
-      ),
-    );
+      // Expecting transition back to idle or cancelled
+      await expectLater(
+        sosBloc.stream,
+        emitsThrough(
+          predicate<SosState>((state) => state.status == SosStatus.cancelled),
+        ),
+      );
 
-    // Verify BLE advertising stops
-    expect(bleService.isAdvertising, isFalse);
-  });
+      // Verify BLE advertising stops
+      expect(bleService.isAdvertising, isFalse);
+    },
+  );
 }

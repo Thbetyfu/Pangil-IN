@@ -4,7 +4,11 @@ class LoginEvent extends DashboardEvent {
   final String email;
   final String password;
   final String otpCode;
-  LoginEvent({required this.email, required this.password, required this.otpCode});
+  LoginEvent({
+    required this.email,
+    required this.password,
+    required this.otpCode,
+  });
 }
 
 class LogoutEvent extends DashboardEvent {}

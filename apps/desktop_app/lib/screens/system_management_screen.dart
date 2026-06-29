@@ -30,11 +30,18 @@ class _SystemManagementScreenState extends State<SystemManagementScreen> {
               // Header
               const Text(
                 'MANAJEMEN SISTEM',
-                style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold, letterSpacing: 1),
+                style: TextStyle(
+                  fontSize: 20,
+                  fontWeight: FontWeight.bold,
+                  letterSpacing: 1,
+                ),
               ),
               Text(
                 'Konfigurasi Infrastruktur CCTV Kota, Pendaftaran Unit Patroli, dan Pemantauan Log Audit',
-                style: TextStyle(fontSize: 12, color: Colors.white.withOpacity(0.5)),
+                style: TextStyle(
+                  fontSize: 12,
+                  color: Colors.white.withOpacity(0.5),
+                ),
               ),
               const SizedBox(height: 24),
 
@@ -61,18 +68,30 @@ class _SystemManagementScreenState extends State<SystemManagementScreen> {
                         mainAxisAlignment: MainAxisAlignment.spaceBetween,
                         children: [
                           Text(
-                            _activeSubTab == 0 ? 'DAFTAR KAMERA AKTIF' : 'DAFTAR REGU DAN PERSONEL',
-                            style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 13, letterSpacing: 0.5),
+                            _activeSubTab == 0
+                                ? 'DAFTAR KAMERA AKTIF'
+                                : 'DAFTAR REGU DAN PERSONEL',
+                            style: const TextStyle(
+                              fontWeight: FontWeight.bold,
+                              fontSize: 13,
+                              letterSpacing: 0.5,
+                            ),
                           ),
                           ElevatedButton.icon(
                             style: ElevatedButton.styleFrom(
                               backgroundColor: SigapTheme.primaryColor,
                               foregroundColor: Colors.white,
-                              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(6)),
+                              shape: RoundedRectangleBorder(
+                                borderRadius: BorderRadius.circular(6),
+                              ),
                             ),
                             onPressed: () => _showAddDialog(),
                             icon: const Icon(Icons.add_rounded, size: 16),
-                            label: Text(_activeSubTab == 0 ? 'TAMBAH CCTV' : 'TAMBAH REGU'),
+                            label: Text(
+                              _activeSubTab == 0
+                                  ? 'TAMBAH CCTV'
+                                  : 'TAMBAH REGU',
+                            ),
                           ),
                         ],
                       ),
@@ -81,8 +100,8 @@ class _SystemManagementScreenState extends State<SystemManagementScreen> {
                       // Lists tables
                       Expanded(
                         child: SingleChildScrollView(
-                          child: _activeSubTab == 0 
-                              ? _buildCctvTable(state.cctvCameras) 
+                          child: _activeSubTab == 0
+                              ? _buildCctvTable(state.cctvCameras)
                               : _buildPatrolTable(state.patrolUnits),
                         ),
                       ),
@@ -101,9 +120,15 @@ class _SystemManagementScreenState extends State<SystemManagementScreen> {
     final bool isActive = _activeSubTab == index;
     return ElevatedButton(
       style: ElevatedButton.styleFrom(
-        backgroundColor: isActive ? SigapTheme.primaryColor : Colors.white.withOpacity(0.04),
-        foregroundColor: isActive ? Colors.white : SigapTheme.textSecondaryColor,
-        side: isActive ? null : BorderSide(color: Colors.white.withOpacity(0.06)),
+        backgroundColor: isActive
+            ? SigapTheme.primaryColor
+            : Colors.white.withOpacity(0.04),
+        foregroundColor: isActive
+            ? Colors.white
+            : SigapTheme.textSecondaryColor,
+        side: isActive
+            ? null
+            : BorderSide(color: Colors.white.withOpacity(0.06)),
         padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 14),
         shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
       ),
@@ -112,7 +137,10 @@ class _SystemManagementScreenState extends State<SystemManagementScreen> {
           _activeSubTab = index;
         });
       },
-      child: Text(title, style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 12)),
+      child: Text(
+        title,
+        style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 12),
+      ),
     );
   }
 
@@ -120,27 +148,68 @@ class _SystemManagementScreenState extends State<SystemManagementScreen> {
     return DataTable(
       headingRowHeight: 48,
       columns: const [
-        DataColumn(label: Text('NAMA KAMERA', style: TextStyle(fontWeight: FontWeight.bold, fontSize: 11))),
-        DataColumn(label: Text('KOORDINAT', style: TextStyle(fontWeight: FontWeight.bold, fontSize: 11))),
-        DataColumn(label: Text('MODE RESOLUSI', style: TextStyle(fontWeight: FontWeight.bold, fontSize: 11))),
-        DataColumn(label: Text('STATUS', style: TextStyle(fontWeight: FontWeight.bold, fontSize: 11))),
+        DataColumn(
+          label: Text(
+            'NAMA KAMERA',
+            style: TextStyle(fontWeight: FontWeight.bold, fontSize: 11),
+          ),
+        ),
+        DataColumn(
+          label: Text(
+            'KOORDINAT',
+            style: TextStyle(fontWeight: FontWeight.bold, fontSize: 11),
+          ),
+        ),
+        DataColumn(
+          label: Text(
+            'MODE RESOLUSI',
+            style: TextStyle(fontWeight: FontWeight.bold, fontSize: 11),
+          ),
+        ),
+        DataColumn(
+          label: Text(
+            'STATUS',
+            style: TextStyle(fontWeight: FontWeight.bold, fontSize: 11),
+          ),
+        ),
       ],
       rows: cameras.map((camera) {
         final isHighFps = camera['fps_mode'] == 'HIGH';
         return DataRow(
           cells: [
-            DataCell(Text(camera['name'] ?? '', style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 13))),
-            DataCell(Text('${camera['latitude']}, ${camera['longitude']}', style: const TextStyle(fontSize: 12))),
+            DataCell(
+              Text(
+                camera['name'] ?? '',
+                style: const TextStyle(
+                  fontWeight: FontWeight.bold,
+                  fontSize: 13,
+                ),
+              ),
+            ),
+            DataCell(
+              Text(
+                '${camera['latitude']}, ${camera['longitude']}',
+                style: const TextStyle(fontSize: 12),
+              ),
+            ),
             DataCell(
               Container(
                 padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
                 decoration: BoxDecoration(
-                  color: isHighFps ? SigapTheme.primaryColor.withOpacity(0.12) : Colors.white.withOpacity(0.04),
+                  color: isHighFps
+                      ? SigapTheme.primaryColor.withOpacity(0.12)
+                      : Colors.white.withOpacity(0.04),
                   borderRadius: BorderRadius.circular(4),
                 ),
                 child: Text(
                   isHighFps ? '1080p / 30 FPS' : '480p / 10 FPS',
-                  style: TextStyle(color: isHighFps ? SigapTheme.primaryColor : SigapTheme.textSecondaryColor, fontSize: 9, fontWeight: FontWeight.bold),
+                  style: TextStyle(
+                    color: isHighFps
+                        ? SigapTheme.primaryColor
+                        : SigapTheme.textSecondaryColor,
+                    fontSize: 9,
+                    fontWeight: FontWeight.bold,
+                  ),
                 ),
               ),
             ),
@@ -152,11 +221,16 @@ class _SystemManagementScreenState extends State<SystemManagementScreen> {
                     height: 8,
                     decoration: BoxDecoration(
                       shape: BoxShape.circle,
-                      color: camera['status'] == 'ACTIVE' ? SigapTheme.successColor : Colors.grey,
+                      color: camera['status'] == 'ACTIVE'
+                          ? SigapTheme.successColor
+                          : Colors.grey,
                     ),
                   ),
                   const SizedBox(width: 8),
-                  Text(camera['status'] ?? '', style: const TextStyle(fontSize: 12)),
+                  Text(
+                    camera['status'] ?? '',
+                    style: const TextStyle(fontSize: 12),
+                  ),
                 ],
               ),
             ),
@@ -170,28 +244,67 @@ class _SystemManagementScreenState extends State<SystemManagementScreen> {
     return DataTable(
       headingRowHeight: 48,
       columns: const [
-        DataColumn(label: Text('NAMA REGU', style: TextStyle(fontWeight: FontWeight.bold, fontSize: 11))),
-        DataColumn(label: Text('NO. KONTAK', style: TextStyle(fontWeight: FontWeight.bold, fontSize: 11))),
-        DataColumn(label: Text('KOORDINAT LOKASI', style: TextStyle(fontWeight: FontWeight.bold, fontSize: 11))),
-        DataColumn(label: Text('STATUS', style: TextStyle(fontWeight: FontWeight.bold, fontSize: 11))),
+        DataColumn(
+          label: Text(
+            'NAMA REGU',
+            style: TextStyle(fontWeight: FontWeight.bold, fontSize: 11),
+          ),
+        ),
+        DataColumn(
+          label: Text(
+            'NO. KONTAK',
+            style: TextStyle(fontWeight: FontWeight.bold, fontSize: 11),
+          ),
+        ),
+        DataColumn(
+          label: Text(
+            'KOORDINAT LOKASI',
+            style: TextStyle(fontWeight: FontWeight.bold, fontSize: 11),
+          ),
+        ),
+        DataColumn(
+          label: Text(
+            'STATUS',
+            style: TextStyle(fontWeight: FontWeight.bold, fontSize: 11),
+          ),
+        ),
       ],
       rows: units.map((unit) {
         return DataRow(
           cells: [
-            DataCell(Text(unit['name'] ?? '', style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 13))),
-            DataCell(Text(unit['phone'] ?? '', style: const TextStyle(fontSize: 12))),
-            DataCell(Text('${unit['latitude']}, ${unit['longitude']}', style: const TextStyle(fontSize: 12))),
+            DataCell(
+              Text(
+                unit['name'] ?? '',
+                style: const TextStyle(
+                  fontWeight: FontWeight.bold,
+                  fontSize: 13,
+                ),
+              ),
+            ),
+            DataCell(
+              Text(unit['phone'] ?? '', style: const TextStyle(fontSize: 12)),
+            ),
+            DataCell(
+              Text(
+                '${unit['latitude']}, ${unit['longitude']}',
+                style: const TextStyle(fontSize: 12),
+              ),
+            ),
             DataCell(
               Container(
                 padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
                 decoration: BoxDecoration(
-                  color: unit['status'] == 'AVAILABLE' ? SigapTheme.successColor.withOpacity(0.1) : Colors.orange.withOpacity(0.1),
+                  color: unit['status'] == 'AVAILABLE'
+                      ? SigapTheme.successColor.withOpacity(0.1)
+                      : Colors.orange.withOpacity(0.1),
                   borderRadius: BorderRadius.circular(6),
                 ),
                 child: Text(
                   unit['status'] ?? '',
                   style: TextStyle(
-                    color: unit['status'] == 'AVAILABLE' ? SigapTheme.successColor : Colors.orange,
+                    color: unit['status'] == 'AVAILABLE'
+                        ? SigapTheme.successColor
+                        : Colors.orange,
                     fontSize: 9,
                     fontWeight: FontWeight.bold,
                   ),
@@ -216,7 +329,9 @@ class _SystemManagementScreenState extends State<SystemManagementScreen> {
         return AlertDialog(
           backgroundColor: SigapTheme.surfaceColor,
           title: Text(
-            _activeSubTab == 0 ? 'Registrasi CCTV Baru' : 'Pendaftaran Regu Patroli Baru',
+            _activeSubTab == 0
+                ? 'Registrasi CCTV Baru'
+                : 'Pendaftaran Regu Patroli Baru',
             style: const TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
           ),
           content: Column(
@@ -226,7 +341,9 @@ class _SystemManagementScreenState extends State<SystemManagementScreen> {
                 controller: nameController,
                 style: const TextStyle(color: Colors.white, fontSize: 13),
                 decoration: InputDecoration(
-                  labelText: _activeSubTab == 0 ? 'Nama CCTV (e.g. Simpang Dago 02)' : 'Nama Unit (e.g. Patroli Dago 1B)',
+                  labelText: _activeSubTab == 0
+                      ? 'Nama CCTV (e.g. Simpang Dago 02)'
+                      : 'Nama Unit (e.g. Patroli Dago 1B)',
                   labelStyle: TextStyle(color: Colors.white.withOpacity(0.4)),
                 ),
               ),
@@ -235,7 +352,9 @@ class _SystemManagementScreenState extends State<SystemManagementScreen> {
                 controller: phoneOrUrlController,
                 style: const TextStyle(color: Colors.white, fontSize: 13),
                 decoration: InputDecoration(
-                  labelText: _activeSubTab == 0 ? 'Stream URL (RTSP/HTTP)' : 'Nomor Kontak Handphone',
+                  labelText: _activeSubTab == 0
+                      ? 'Stream URL (RTSP/HTTP)'
+                      : 'Nomor Kontak Handphone',
                   labelStyle: TextStyle(color: Colors.white.withOpacity(0.4)),
                 ),
               ),
@@ -248,7 +367,9 @@ class _SystemManagementScreenState extends State<SystemManagementScreen> {
                       style: const TextStyle(color: Colors.white, fontSize: 13),
                       decoration: InputDecoration(
                         labelText: 'Latitude',
-                        labelStyle: TextStyle(color: Colors.white.withOpacity(0.4)),
+                        labelStyle: TextStyle(
+                          color: Colors.white.withOpacity(0.4),
+                        ),
                       ),
                     ),
                   ),
@@ -259,7 +380,9 @@ class _SystemManagementScreenState extends State<SystemManagementScreen> {
                       style: const TextStyle(color: Colors.white, fontSize: 13),
                       decoration: InputDecoration(
                         labelText: 'Longitude',
-                        labelStyle: TextStyle(color: Colors.white.withOpacity(0.4)),
+                        labelStyle: TextStyle(
+                          color: Colors.white.withOpacity(0.4),
+                        ),
                       ),
                     ),
                   ),
@@ -270,25 +393,44 @@ class _SystemManagementScreenState extends State<SystemManagementScreen> {
           actions: [
             TextButton(
               onPressed: () => Navigator.pop(dialogContext),
-              child: const Text('Batal', style: TextStyle(color: SigapTheme.textSecondaryColor)),
+              child: const Text(
+                'Batal',
+                style: TextStyle(color: SigapTheme.textSecondaryColor),
+              ),
             ),
             ElevatedButton(
-              style: ElevatedButton.styleFrom(backgroundColor: SigapTheme.primaryColor),
+              style: ElevatedButton.styleFrom(
+                backgroundColor: SigapTheme.primaryColor,
+              ),
               onPressed: () async {
                 final String name = nameController.text.trim();
                 final String extra = phoneOrUrlController.text.trim();
-                final double lat = double.tryParse(latController.text) ?? -6.90344;
-                final double lng = double.tryParse(lngController.text) ?? 107.61872;
+                final double lat =
+                    double.tryParse(latController.text) ?? -6.90344;
+                final double lng =
+                    double.tryParse(lngController.text) ?? 107.61872;
 
                 if (name.isNotEmpty && extra.isNotEmpty) {
                   Navigator.pop(dialogContext);
 
                   // Trigger API call to create
                   final token = context.read<DashboardBloc>().state.token;
-                  final url = _activeSubTab == 0 ? 'http://localhost:3001/api/cctv' : 'http://localhost:3001/api/patrol';
-                  final body = _activeSubTab == 0 
-                      ? {'name': name, 'stream_url': extra, 'latitude': lat, 'longitude': lng}
-                      : {'name': name, 'phone': extra, 'latitude': lat, 'longitude': lng};
+                  final url = _activeSubTab == 0
+                      ? 'http://localhost:3001/api/cctv'
+                      : 'http://localhost:3001/api/patrol';
+                  final body = _activeSubTab == 0
+                      ? {
+                          'name': name,
+                          'stream_url': extra,
+                          'latitude': lat,
+                          'longitude': lng,
+                        }
+                      : {
+                          'name': name,
+                          'phone': extra,
+                          'latitude': lat,
+                          'longitude': lng,
+                        };
 
                   try {
                     final response = await http.post(
@@ -300,7 +442,7 @@ class _SystemManagementScreenState extends State<SystemManagementScreen> {
                       body: jsonEncode(body),
                     );
                     print('Management creation response: ${response.body}');
-                    
+
                     // Reload initial data
                     context.read<DashboardBloc>().add(LoadInitialDataEvent());
                   } catch (e) {
@@ -308,7 +450,10 @@ class _SystemManagementScreenState extends State<SystemManagementScreen> {
                   }
                 }
               },
-              child: const Text('Simpan', style: TextStyle(color: Colors.white)),
+              child: const Text(
+                'Simpan',
+                style: TextStyle(color: Colors.white),
+              ),
             ),
           ],
         );
