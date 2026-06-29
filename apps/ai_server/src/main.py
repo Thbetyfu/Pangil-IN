@@ -58,6 +58,17 @@ def escape_prediction(req: EscapeRequest):
         "predicted_routes": routes
     }
 
+class ReidRequest(BaseModel):
+    start_node: str
+    suspect_features: str
+
+@app.post("/ai/reid-tracking")
+def reid_tracking(req: ReidRequest):
+    result = street_graph.simulate_gnn_reid(req.start_node, req.suspect_features)
+    if "status" in result and result["status"] == "error":
+        raise HTTPException(status_code=404, detail=result["message"])
+    return result
+
 @app.post("/cctv/test-trigger-alert")
 def test_trigger_alert(req: TriggerAlertRequest):
     # This endpoint simulates the AI Server identifying an anomaly and sending a request

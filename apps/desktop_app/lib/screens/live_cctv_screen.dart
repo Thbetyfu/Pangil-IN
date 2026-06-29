@@ -302,7 +302,7 @@ class _LiveCctvScreenState extends State<LiveCctvScreen> {
         left: 80,
         child: Container(
           padding: const EdgeInsets.all(4),
-          color: Colors.black85,
+          color: Colors.black87,
           child: const Text(
             'Re-ID ID: 09 [Helm Merah | Beat Hitam]',
             style: TextStyle(color: SigapTheme.secondaryColor, fontSize: 8, fontWeight: FontWeight.bold),
@@ -326,7 +326,7 @@ class _LiveCctvScreenState extends State<LiveCctvScreen> {
       child: Container(
         width: width,
         height: height,
-        decoration: Border.all(color: color, width: 2),
+        decoration: BoxDecoration(border: Border.all(color: color, width: 2)),
         child: Stack(
           clipBehavior: Clip.none,
           children: [

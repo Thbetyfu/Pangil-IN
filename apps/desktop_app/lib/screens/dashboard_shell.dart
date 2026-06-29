@@ -122,7 +122,9 @@ class _DashboardShellState extends State<DashboardShell> {
                       // Sidebar Header
                       Container(
                         padding: const EdgeInsets.symmetric(vertical: 24, horizontal: 20),
-                        border: Border(bottom: BorderSide(color: Colors.white.withOpacity(0.05))),
+                        decoration: BoxDecoration(
+                          border: Border(bottom: BorderSide(color: Colors.white.withOpacity(0.05))),
+                        ),
                         child: Row(
                           children: [
                             Container(

@@ -8,6 +8,7 @@ class SosState {
   final int countdown;
   final String? reportId;
   final String? errorMessage;
+  final bool fakeShutdown;
 
   SosState({
     this.status = SosStatus.idle,
@@ -17,6 +18,7 @@ class SosState {
     this.countdown = 60,
     this.reportId,
     this.errorMessage,
+    this.fakeShutdown = false,
   });
 
   SosState copyWith({
@@ -27,6 +29,7 @@ class SosState {
     int? countdown,
     String? reportId,
     String? errorMessage,
+    bool? fakeShutdown,
   }) {
     return SosState(
       status: status ?? this.status,
@@ -36,6 +39,7 @@ class SosState {
       countdown: countdown ?? this.countdown,
       reportId: reportId ?? this.reportId,
       errorMessage: errorMessage ?? this.errorMessage,
+      fakeShutdown: fakeShutdown ?? this.fakeShutdown,
     );
   }
 }

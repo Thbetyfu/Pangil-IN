@@ -71,7 +71,7 @@ class LocalDatabase extends _$LocalDatabase {
 QueryExecutor _openConnection() {
   return LazyDatabase(() async {
     if (kIsWeb) {
-      return SqfliteQueryExecutor.inMemory();
+      return SqfliteQueryExecutor(path: ':memory:', logStatements: kDebugMode);
     }
     return SqfliteQueryExecutor(path: 'panggilin_local.db', logStatements: kDebugMode);
   });

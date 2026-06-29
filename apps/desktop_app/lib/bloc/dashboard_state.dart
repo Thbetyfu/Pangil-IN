@@ -12,6 +12,8 @@ class DashboardState {
   final List<dynamic> cctvAlerts;
   final List<dynamic> cctvCameras;
   final Map<String, List<Map<String, double>>> gpsTrackLogs;
+  final List<dynamic> predictedRoutes;
+  final List<dynamic> reidPredictions;
   final bool isLoading;
   final String? error;
 
@@ -29,6 +31,8 @@ class DashboardState {
     this.cctvAlerts = const [],
     this.cctvCameras = const [],
     this.gpsTrackLogs = const {},
+    this.predictedRoutes = const [],
+    this.reidPredictions = const [],
     this.isLoading = false,
     this.error,
   });
@@ -47,6 +51,8 @@ class DashboardState {
     List<dynamic>? cctvAlerts,
     List<dynamic>? cctvCameras,
     Map<String, List<Map<String, double>>>? gpsTrackLogs,
+    List<dynamic>? predictedRoutes,
+    List<dynamic>? reidPredictions,
     bool? isLoading,
     String? error,
   }) {
@@ -64,6 +70,8 @@ class DashboardState {
       cctvAlerts: cctvAlerts ?? this.cctvAlerts,
       cctvCameras: cctvCameras ?? this.cctvCameras,
       gpsTrackLogs: gpsTrackLogs ?? this.gpsTrackLogs,
+      predictedRoutes: predictedRoutes ?? this.predictedRoutes,
+      reidPredictions: reidPredictions ?? this.reidPredictions,
       isLoading: isLoading ?? this.isLoading,
       error: error ?? this.error,
     );

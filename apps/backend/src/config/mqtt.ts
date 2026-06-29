@@ -1,33 +1,46 @@
-import { EventEmitter } from 'events';
+import mqtt from 'mqtt';
 import prisma from './db';
 import { notifyDispatchers } from './socket';
 
-class MockMqttClient extends EventEmitter {
-  public subscribe(topic: string, callback?: (err?: Error) => void) {
-    console.log(`[Mock MQTT] Subscribed to topic: ${topic}`);
-    if (callback) callback();
-  }
+let mqttClient: mqtt.MqttClient;
 
-  public publish(topic: string, message: string | Buffer, callback?: (err?: Error) => void) {
-    // Simulate receiving a message after a brief delay
-    setTimeout(() => {
-      this.emit('message', topic, Buffer.from(message));
-    }, 50);
-    if (callback) callback();
-  }
-}
+/**
+ * Initializes the connection to the physical MQTT broker.
+ * Subscribes to GPS and CCTV alert topics and processes messages.
+ */
+export const initMqtt = (): mqtt.MqttClient => {
+  const brokerUrl = process.env.MQTT_BROKER_URL || 'mqtt://localhost:1883';
+  console.log(`[MQTT] Connecting to MQTT broker at ${brokerUrl}...`);
 
-const mockMqtt = new MockMqttClient();
+  mqttClient = mqtt.connect(brokerUrl);
 
-export const initMqtt = (): MockMqttClient => {
-  console.log('[Mock MQTT] Initializing Mock MQTT Broker in-memory...');
+  mqttClient.on('connect', () => {
+    console.log('[MQTT] Connected to MQTT broker successfully');
+    
+    // Subscribe to citizen location tracking telemetry
+    mqttClient.subscribe('panggil-in/gps/+', (err) => {
+      if (err) {
+        console.error('[MQTT] GPS subscription failed:', err);
+      } else {
+        console.log('[MQTT] Subscribed to panggil-in/gps/+');
+      }
+    });
 
-  // Setup message listener
-  mockMqtt.on('message', async (topic: string, message: Buffer) => {
+    // Subscribe to AI server CCTV alerts
+    mqttClient.subscribe('panggil-in/cctv/alerts', (err) => {
+      if (err) {
+        console.error('[MQTT] CCTV alerts subscription failed:', err);
+      } else {
+        console.log('[MQTT] Subscribed to panggil-in/cctv/alerts');
+      }
+    });
+  });
+
+  mqttClient.on('message', async (topic: string, message: Buffer) => {
     try {
       const payloadString = message.toString();
       const payload = JSON.parse(payloadString);
-      console.log(`[Mock MQTT] Msg Received [${topic}]:`, payload);
+      console.log(`[MQTT] Message received [${topic}]:`, payload);
 
       // Handle GPS tracking updates: panggil-in/gps/:reportId
       if (topic.startsWith('panggil-in/gps/')) {
@@ -56,7 +69,7 @@ export const initMqtt = (): MockMqttClient => {
         const { cctvId, confidence, snapshotUrl, videoClipUrl, suspectFeatureVector } = payload;
 
         if (cctvId && typeof confidence === 'number' && snapshotUrl) {
-          // Create CCTV Alert
+          // Create CCTV Alert record
           const alert = await prisma.cCTVAlert.create({
             data: {
               cctv_id: cctvId,
@@ -76,13 +89,23 @@ export const initMqtt = (): MockMqttClient => {
         }
       }
     } catch (error) {
-      console.error(`[Mock MQTT] Error processing message on topic ${topic}:`, error);
+      console.error(`[MQTT] Error processing message on topic ${topic}:`, error);
     }
   });
 
-  return mockMqtt;
+  mqttClient.on('error', (error) => {
+    console.error('[MQTT] Client connection error:', error);
+  });
+
+  return mqttClient;
 };
 
-export const getMqttClient = (): MockMqttClient => {
-  return mockMqtt;
+/**
+ * Returns the active MQTT client instance.
+ */
+export const getMqttClient = (): mqtt.MqttClient => {
+  if (!mqttClient) {
+    throw new Error('MQTT client has not been initialized. Call initMqtt() first.');
+  }
+  return mqttClient;
 };

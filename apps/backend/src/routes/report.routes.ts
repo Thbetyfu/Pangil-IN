@@ -375,4 +375,70 @@ router.post(
   }
 );
 
+// 7. BLE Mesh Relay Endpoint (PRD F-03 BLE Mesh Tracking)
+const bleRelaySchema = z.object({
+  body: z.object({
+    beacon_id: z.string(),
+    latitude: z.number().min(-90).max(90),
+    longitude: z.number().min(-180).max(180),
+    relay_user_id: z.string().optional(),
+  }),
+});
+
+router.post(
+  '/ble-relay',
+  validate(bleRelaySchema),
+  async (req: Request, res: Response, next: NextFunction): Promise<void> => {
+    try {
+      const { beacon_id, latitude, longitude, relay_user_id } = req.body;
+
+      // Find active report matching beacon_id as report ID or reporter ID
+      let report = await prisma.report.findFirst({
+        where: {
+          OR: [
+            { id: beacon_id },
+            { reporter_id: beacon_id }
+          ],
+          status: { in: [ReportStatus.PENDING, ReportStatus.VALIDATED, 'ON_PROCESS'] }
+        },
+        orderBy: {
+          created_at: 'desc'
+        }
+      });
+
+      if (!report) {
+        throw new NotFoundError('No active SOS report found for this beacon ID');
+      }
+
+      // Update coordinates
+      const updatedReport = await prisma.report.update({
+        where: { id: report.id },
+        data: { latitude, longitude }
+      });
+
+      // Notify dispatchers with BLE mesh relayer info
+      notifyDispatchers('gps_update', {
+        reportId: report.id,
+        latitude,
+        longitude,
+        isBleRelay: true,
+        relayName: relay_user_id ? `Relay User (${relay_user_id.substring(0, 8)})` : 'Relay Komunitas Anonim',
+        updatedAt: new Date()
+      });
+
+      res.status(200).json({
+        status: 'success',
+        data: {
+          reportId: report.id,
+          latitude,
+          longitude,
+          isBleRelay: true
+        }
+      });
+    } catch (error) {
+      next(error);
+    }
+  }
+);
+
 export default router;

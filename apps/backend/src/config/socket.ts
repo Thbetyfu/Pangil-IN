@@ -42,12 +42,43 @@ export const initSocket = (server: HttpServer): Server => {
     });
 
     // Update coordinates for proximity notifications (Citizen Riding/Active mode)
-    socket.on('update_location', (data: { latitude: number; longitude: number }) => {
+    socket.on('update_location', async (data: { latitude: number; longitude: number }) => {
       const active = activeSockets.get(socket.id);
       if (active) {
         active.latitude = data.latitude;
         active.longitude = data.longitude;
         activeSockets.set(socket.id, active);
+
+        // If the socket belongs to a citizen, check if they have any active SOS report
+        if (active.role === Role.CITIZEN) {
+          try {
+            const prisma = require('./db').default;
+            const activeReport = await prisma.report.findFirst({
+              where: {
+                citizen_id: active.userId,
+                status: 'PENDING',
+              },
+              orderBy: {
+                created_at: 'desc',
+              },
+            });
+
+            if (activeReport) {
+              const { getMqttClient } = require('./mqtt');
+              const mqttClient = getMqttClient();
+              if (mqttClient) {
+                const topic = `panggil-in/gps/${activeReport.id}`;
+                mqttClient.publish(topic, JSON.stringify({
+                  latitude: data.latitude,
+                  longitude: data.longitude,
+                }));
+                console.log(`[Socket->MQTT] Bridge: Published location to ${topic}`);
+              }
+            }
+          } catch (err) {
+            console.error('[Socket->MQTT] Error bridging location to MQTT:', err);
+          }
+        }
       }
     });
 

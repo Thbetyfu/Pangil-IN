@@ -1,8 +1,10 @@
 import 'dart:async';
 import 'dart:math';
+import 'dart:ui';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
+import '../services/api_service.dart';
 import '../bloc/sos_bloc.dart';
 import '../bloc/sos_event.dart';
 import '../bloc/sos_state.dart';
@@ -44,6 +46,8 @@ class _HomeScreenState extends State<HomeScreen> with SingleTickerProviderStateM
     }
   ];
 
+  StreamSubscription<Map<String, dynamic>>? _alertSubscription;
+
   @override
   void initState() {
     super.initState();
@@ -51,11 +55,32 @@ class _HomeScreenState extends State<HomeScreen> with SingleTickerProviderStateM
       vsync: this,
       duration: const Duration(milliseconds: 1200),
     )..repeat(reverse: true);
+
+    // Initialize Socket.io connection and listen to proximity alerts (PRD F-04)
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      final apiService = context.read<ApiService>();
+      apiService.initSocket();
+      _alertSubscription = apiService.communityAlerts.listen((alert) {
+        if (mounted) {
+          setState(() {
+            _mockNearbyIncidents.insert(0, {
+              'title': 'SOS Proximity Alert',
+              'location': 'Radius ${alert['distance']}m dari posisi Anda',
+              'time': 'Baru saja',
+              'urgency': 'HIGH',
+              'is_spoofed': false,
+            });
+          });
+          _showProximityAlertDialog(context, alert);
+        }
+      });
+    });
   }
 
   @override
   void dispose() {
     _waveController.dispose();
+    _alertSubscription?.cancel();
     super.dispose();
   }
 
@@ -146,6 +171,8 @@ class _HomeScreenState extends State<HomeScreen> with SingleTickerProviderStateM
                                ),
                                const SizedBox(height: 20),
                                 _buildRidingModeCard(state.ridingMode),
+                                const SizedBox(height: 12),
+                                _buildFakeShutdownCard(state.fakeShutdown),
                                 const SizedBox(height: 24),
                                 _buildNearbyIncidentsHeader(),
                                 const SizedBox(height: 12),
@@ -169,6 +196,26 @@ class _HomeScreenState extends State<HomeScreen> with SingleTickerProviderStateM
             // SOS Active Screen Overlay
             if (state.status == SosStatus.sending || state.status == SosStatus.active)
               _buildSosActiveOverlay(state.status),
+
+            // Fake Shutdown Screen Overlay (Stealth mode)
+            if (state.fakeShutdown)
+              Positioned.fill(
+                child: PopScope(
+                  canPop: false,
+                  child: GestureDetector(
+                    onDoubleTap: () {
+                      HapticFeedback.heavyImpact();
+                      context.read<SosBloc>().add(ToggleFakeShutdownEvent(enable: false));
+                    },
+                    child: Container(
+                      color: Colors.black,
+                      child: const Center(
+                        child: SizedBox.shrink(),
+                      ),
+                    ),
+                  ),
+                ),
+              ),
           ],
         );
       },
@@ -421,6 +468,69 @@ class _HomeScreenState extends State<HomeScreen> with SingleTickerProviderStateM
     );
   }
 
+  Widget _buildFakeShutdownCard(bool isEnabled) {
+    return GlassCard(
+      opacity: isEnabled ? 0.12 : 0.06,
+      color: isEnabled ? Colors.redAccent : Colors.white,
+      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+      border: Border.all(
+        color: isEnabled ? Colors.redAccent.withOpacity(0.4) : Colors.white.withOpacity(0.06),
+        width: 1,
+      ),
+      child: Row(
+        children: [
+          Container(
+            padding: const EdgeInsets.all(10),
+            decoration: BoxDecoration(
+              color: isEnabled ? Colors.redAccent.withOpacity(0.2) : Colors.white.withOpacity(0.05),
+              shape: BoxShape.circle,
+            ),
+            child: const Icon(
+              Icons.power_settings_new_rounded,
+              color: Colors.redAccent,
+              size: 24,
+            ),
+          ),
+          const SizedBox(width: 16),
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                const Text(
+                  'Penyamaran Layar Mati (Fake Shutdown)',
+                  style: TextStyle(
+                    color: Colors.white,
+                    fontWeight: FontWeight.bold,
+                    fontSize: 14,
+                  ),
+                ),
+                const SizedBox(height: 2),
+                Text(
+                  'Menggelapkan layar saat dirampas agar pelaku mengira HP mati.',
+                  style: TextStyle(
+                    color: Colors.white.withOpacity(0.6),
+                    fontSize: 11,
+                  ),
+                ),
+              ],
+            ),
+          ),
+          Switch(
+            value: isEnabled,
+            activeColor: Colors.redAccent,
+            activeTrackColor: Colors.redAccent.withOpacity(0.3),
+            inactiveThumbColor: Colors.grey,
+            inactiveTrackColor: Colors.white10,
+            onChanged: (value) {
+              HapticFeedback.lightImpact();
+              context.read<SosBloc>().add(ToggleFakeShutdownEvent(enable: value));
+            },
+          ),
+        ],
+      ),
+    );
+  }
+
   Widget _buildNearbyIncidentsHeader() {
     return Row(
       mainAxisAlignment: MainAxisAlignment.spaceBetween,
@@ -649,7 +759,7 @@ class _HomeScreenState extends State<HomeScreen> with SingleTickerProviderStateM
                     ),
                     const SizedBox(height: 12),
                     const Text(
-                      'Jika tidak ada tindakan dalam waktu 1 menit,\nsinyal SOS otomatis dikirim ke polisi.',
+                      'Jika tidak ada tindakan dalam waktu 1 menit,\nsinyal SOS otomatis dibatalkan.',
                       textAlign: TextAlign.center,
                       style: TextStyle(
                         color: Colors.white60,
@@ -971,6 +1081,118 @@ class _HomeScreenState extends State<HomeScreen> with SingleTickerProviderStateM
           ],
         ),
       ),
+    );
+  }
+
+  void _showProximityAlertDialog(BuildContext context, Map<String, dynamic> alert) {
+    showDialog(
+      context: context,
+      barrierDismissible: true,
+      builder: (context) {
+        return Dialog(
+          backgroundColor: Colors.transparent,
+          insetPadding: const EdgeInsets.symmetric(horizontal: 24),
+          child: Stack(
+            children: [
+              // Glassmorphism Blur background
+              ClipRRect(
+                borderRadius: BorderRadius.circular(16),
+                child: BackdropFilter(
+                  filter: ImageFilter.blur(sigmaX: 12, sigmaY: 12),
+                  child: Container(
+                    padding: const EdgeInsets.all(24),
+                    decoration: BoxDecoration(
+                      color: const Color(0xFF1E2638).withOpacity(0.35),
+                      borderRadius: BorderRadius.circular(16),
+                      border: Border.all(
+                        color: const Color(0xFFFF1744).withOpacity(0.24),
+                        width: 1.5,
+                      ),
+                    ),
+                    child: Column(
+                      mainAxisSize: MainAxisSize.min,
+                      children: [
+                        // Alert Icon
+                        Container(
+                          padding: const EdgeInsets.all(12),
+                          decoration: BoxDecoration(
+                            color: const Color(0xFFFF1744).withOpacity(0.12),
+                            shape: BoxShape.circle,
+                          ),
+                          child: const Icon(
+                            Icons.warning_rounded,
+                            color: Color(0xFFFF1744),
+                            size: 32,
+                          ),
+                        ),
+                        const SizedBox(height: 16),
+                        // Title
+                        const Text(
+                          'PERINGATAN DARURAT SEKITAR',
+                          style: TextStyle(
+                            fontSize: 16,
+                            fontWeight: FontWeight.bold,
+                            color: Color(0xFFFF1744),
+                            letterSpacing: 0.5,
+                          ),
+                          textAlign: TextAlign.center,
+                        ),
+                        const SizedBox(height: 12),
+                        // Description
+                        Text(
+                          alert['message'] ?? 'Sinyal bahaya terdeteksi di sekitar posisi Anda.',
+                          style: const TextStyle(
+                            fontSize: 13,
+                            color: Colors.white,
+                            height: 1.5,
+                          ),
+                          textAlign: TextAlign.center,
+                        ),
+                        const SizedBox(height: 24),
+                        // Action Buttons
+                        Row(
+                          children: [
+                            Expanded(
+                              child: TextButton(
+                                style: TextButton.styleFrom(
+                                  backgroundColor: Colors.white.withOpacity(0.04),
+                                  foregroundColor: Colors.white70,
+                                  shape: RoundedRectangleBorder(
+                                    borderRadius: BorderRadius.circular(8),
+                                  ),
+                                ),
+                                onPressed: () => Navigator.pop(context),
+                                child: const Text('ABAIKAN', style: TextStyle(fontWeight: FontWeight.bold, fontSize: 12)),
+                              ),
+                            ),
+                            const SizedBox(width: 12),
+                            Expanded(
+                              child: ElevatedButton(
+                                style: ElevatedButton.styleFrom(
+                                  backgroundColor: const Color(0xFFFF1744),
+                                  foregroundColor: Colors.white,
+                                  shape: RoundedRectangleBorder(
+                                    borderRadius: BorderRadius.circular(8),
+                                  ),
+                                ),
+                                onPressed: () {
+                                  Navigator.pop(context);
+                                  Navigator.pushNamed(context, '/pantau');
+                                },
+                                child: const Text('LIHAT PETA', style: TextStyle(fontWeight: FontWeight.bold, fontSize: 12)),
+                              ),
+                            ),
+                          ],
+                        )
+                      ],
+                    ),
+                  ),
+                ),
+              ),
+            ],
+          ),
+        );
+      },
     );
   }
 }

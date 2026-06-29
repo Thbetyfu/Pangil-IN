@@ -30,6 +30,7 @@ class DashboardBloc extends Bloc<DashboardEvent, DashboardState> {
     // AI Mock / CCTV trigger events
     on<TriggerMockSosEvent>(_onTriggerMockSos);
     on<UpdateCctvFpsEvent>(_onUpdateCctvFps);
+    on<FetchSuspectAnalysisEvent>(_onFetchSuspectAnalysis);
   }
 
   Future<void> _onLogin(LoginEvent event, Emitter<DashboardState> emit) async {
@@ -180,12 +181,17 @@ class DashboardBloc extends Bloc<DashboardEvent, DashboardState> {
       return r;
     }).toList();
 
-    // Append to logs
+    // Append to logs (PRD F-03 BLE Mesh Tracking)
     final logs = Map<String, List<Map<String, double>>>.from(state.gpsTrackLogs);
     if (!logs.containsKey(reportId)) {
       logs[reportId] = [];
     }
-    logs[reportId]!.add({'latitude': lat, 'longitude': lng});
+    final double isBleRelayVal = (event.data['isBleRelay'] == true) ? 1.0 : 0.0;
+    logs[reportId]!.add({
+      'latitude': lat,
+      'longitude': lng,
+      'isBleRelay': isBleRelayVal,
+    });
 
     // Update currently selected report if it matches
     Map<String, dynamic>? updatedSelected = state.selectedReport;
@@ -263,6 +269,25 @@ class DashboardBloc extends Bloc<DashboardEvent, DashboardState> {
       }
     } catch (e) {
       print('Failed to update CCTV FPS: $e');
+    }
+  }
+
+  Future<void> _onFetchSuspectAnalysis(FetchSuspectAnalysisEvent event, Emitter<DashboardState> emit) async {
+    emit(state.copyWith(isLoading: true, error: null));
+    try {
+      final routes = await dispatchService.getEscapePrediction(event.startNode, event.headingNode);
+      final predictions = await dispatchService.getReidTracking(event.startNode, event.suspectFeatures);
+
+      emit(state.copyWith(
+        isLoading: false,
+        predictedRoutes: routes,
+        reidPredictions: predictions,
+      ));
+    } catch (e) {
+      emit(state.copyWith(
+        isLoading: false,
+        error: 'Failed to run AI Re-ID / GNN analysis: $e',
+      ));
     }
   }
 }

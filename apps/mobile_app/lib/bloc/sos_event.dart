@@ -24,3 +24,8 @@ class ToggleRidingModeEvent extends SosEvent {
   final bool enable;
   ToggleRidingModeEvent({required this.enable});
 }
+
+class ToggleFakeShutdownEvent extends SosEvent {
+  final bool enable;
+  ToggleFakeShutdownEvent({required this.enable});
+}

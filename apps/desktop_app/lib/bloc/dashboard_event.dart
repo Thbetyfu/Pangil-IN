@@ -54,3 +54,14 @@ class UpdateCctvFpsEvent extends DashboardEvent {
   final String fpsMode;
   UpdateCctvFpsEvent({required this.cctvId, required this.fpsMode});
 }
+
+class FetchSuspectAnalysisEvent extends DashboardEvent {
+  final String startNode;
+  final String headingNode;
+  final String suspectFeatures;
+  FetchSuspectAnalysisEvent({
+    required this.startNode,
+    required this.headingNode,
+    required this.suspectFeatures,
+  });
+}

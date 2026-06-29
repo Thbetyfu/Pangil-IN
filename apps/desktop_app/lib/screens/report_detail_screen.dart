@@ -2,7 +2,7 @@ import 'dart:math';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:flutter_map/flutter_map.dart';
-import 'package:latlong2/latlong2.dart';
+import 'package:latlong2/latlong.dart';
 import '../bloc/dashboard_bloc.dart';
 import '../bloc/dashboard_event.dart';
 import '../bloc/dashboard_state.dart';
@@ -48,9 +48,98 @@ class _ReportDetailScreenState extends State<ReportDetailScreen> {
         final String status = report['status'];
         final String urgency = report['urgency'];
 
+        // Node coordinates mapping for GNN predicted route conversion
+        final Map<String, LatLng> nodeCoordinates = {
+          'simpang_dago': const LatLng(-6.90344, 107.61872),
+          'dago_bawah': const LatLng(-6.90844, 107.61872),
+          'dago_atas': const LatLng(-6.89844, 107.61872),
+          'dipatiukur': const LatLng(-6.90344, 107.61472),
+          'siliwangi': const LatLng(-6.90344, 107.62272),
+          'cihampelas': const LatLng(-6.90344, 107.62672),
+          'flyover_pasupati': const LatLng(-6.90644, 107.61472),
+          'merdeka': const LatLng(-6.91144, 107.61872),
+        };
+
+        // Convert GNN predicted escape routes to map polylines
+        final List<Polyline> escapePolylines = [];
+        for (var route in state.predictedRoutes) {
+          final List<dynamic> pathNodes = route['path'] ?? [];
+          final List<LatLng> points = pathNodes
+              .where((node) => nodeCoordinates.containsKey(node))
+              .map<LatLng>((node) => nodeCoordinates[node]!)
+              .toList();
+          
+          if (points.isNotEmpty) {
+            escapePolylines.add(
+              Polyline(
+                points: points,
+                color: Colors.amber.withOpacity(0.55),
+                strokeWidth: 5,
+              ),
+            );
+          }
+        }
+
+        // Convert GNN matching CCTV predictions to map markers
+        final List<Marker> reidMarkers = state.reidPredictions.map<Marker>((pred) {
+          final double probability = pred['reid_probability'] ?? 0.0;
+          final double lat = pred['latitude'] ?? -6.90344;
+          final double lng = pred['longitude'] ?? 107.61872;
+          
+          return Marker(
+            point: LatLng(lat, lng),
+            width: 70,
+            height: 70,
+            child: Tooltip(
+              message: '${pred['node_name']} (Re-ID: ${(probability * 100).toInt()}%)',
+              child: Column(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  Container(
+                    padding: const EdgeInsets.all(4),
+                    decoration: BoxDecoration(
+                      color: Colors.amber.withOpacity(0.15),
+                      shape: BoxShape.circle,
+                      border: Border.all(
+                        color: Colors.amber.withOpacity(0.6),
+                        width: 1.5,
+                      ),
+                    ),
+                    child: Icon(
+                      Icons.videocam_rounded,
+                      color: probability > 0.7 ? Colors.redAccent : Colors.amberAccent,
+                      size: 14,
+                    ),
+                  ),
+                  const SizedBox(height: 1),
+                  Container(
+                    padding: const EdgeInsets.symmetric(horizontal: 4, vertical: 1),
+                    decoration: BoxDecoration(
+                      color: Colors.black87,
+                      borderRadius: BorderRadius.circular(4),
+                      border: Border.all(color: Colors.white10),
+                    ),
+                    child: Text(
+                      '${(probability * 100).toInt()}%',
+                      style: const TextStyle(
+                        fontSize: 8,
+                        fontWeight: FontWeight.bold,
+                        color: Colors.amberAccent,
+                      ),
+                    ),
+                  )
+                ],
+              ),
+            ),
+          );
+        }).toList();
+
         // Get GPS track logs for polyline
-        final trackPoints = (state.gpsTrackLogs[report['id']] ?? [])
-            .map((coord) => LatLng(coord['latitude']!, coord['longitude']!))
+        final List<dynamic> rawLogs = state.gpsTrackLogs[report['id']] ?? [];
+        final bool lastUpdateWasBle = rawLogs.isNotEmpty && rawLogs.last['isBleRelay'] == 1.0;
+
+        final List<LatLng> trackPoints = rawLogs
+            .map<LatLng>((coord) => LatLng(coord['latitude']!, coord['longitude']!))
             .toList();
 
         // Coordinates for centering mini map
@@ -237,7 +326,7 @@ class _ReportDetailScreenState extends State<ReportDetailScreen> {
                                       width: double.infinity,
                                       padding: const EdgeInsets.all(16),
                                       decoration: BoxDecoration(
-                                        color: Colors.black25,
+                                        color: Colors.black26,
                                         borderRadius: BorderRadius.circular(10),
                                         border: Border.all(color: Colors.white.withOpacity(0.04)),
                                       ),
@@ -308,7 +397,7 @@ class _ReportDetailScreenState extends State<ReportDetailScreen> {
                                     Container(
                                       padding: const EdgeInsets.all(16),
                                       decoration: BoxDecoration(
-                                        color: Colors.black25,
+                                        color: Colors.black26,
                                         borderRadius: BorderRadius.circular(10),
                                         border: Border.all(color: Colors.white.withOpacity(0.04)),
                                       ),
@@ -384,7 +473,44 @@ class _ReportDetailScreenState extends State<ReportDetailScreen> {
                       child: Column(
                         crossAxisAlignment: CrossAxisAlignment.stretch,
                         children: [
-                          _buildSectionTitle('PETA PELACAKAN LOKASI (REAL-TIME)'),
+                          Row(
+                            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                            children: [
+                              _buildSectionTitle('PETA PELACAKAN LOKASI (REAL-TIME)'),
+                              if (lastUpdateWasBle)
+                                Container(
+                                  padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                                  decoration: BoxDecoration(
+                                    color: Colors.blueAccent.withOpacity(0.12),
+                                    borderRadius: BorderRadius.circular(12),
+                                    border: Border.all(color: Colors.blueAccent.withOpacity(0.3)),
+                                  ),
+                                  child: Row(
+                                    mainAxisSize: MainAxisSize.min,
+                                    children: [
+                                      Container(
+                                        width: 6,
+                                        height: 6,
+                                        decoration: const BoxDecoration(
+                                          color: Colors.blueAccent,
+                                          shape: BoxShape.circle,
+                                        ),
+                                      ),
+                                      const SizedBox(width: 6),
+                                      const Text(
+                                        'ESTAFET BLE MESH AKTIF',
+                                        style: TextStyle(
+                                          color: Colors.blueAccent,
+                                          fontSize: 9,
+                                          fontWeight: FontWeight.bold,
+                                          letterSpacing: 0.5,
+                                        ),
+                                      ),
+                                    ],
+                                  ),
+                                ),
+                            ],
+                          ),
                           const SizedBox(height: 8),
                           Expanded(
                             child: ClipRRect(
@@ -430,7 +556,8 @@ class _ReportDetailScreenState extends State<ReportDetailScreen> {
                                           color: SigapTheme.primaryColor,
                                           strokeWidth: 4,
                                           isDotted: true,
-                                        )
+                                        ),
+                                        ...escapePolylines,
                                       ],
                                     ),
                                     MarkerLayer(
@@ -438,19 +565,37 @@ class _ReportDetailScreenState extends State<ReportDetailScreen> {
                                         // Incident / user
                                         Marker(
                                           point: incidentLatLng,
-                                          width: 40,
-                                          height: 40,
+                                          width: 60,
+                                          height: 60,
                                           child: Container(
-                                            decoration: const BoxDecoration(
-                                              color: SigapTheme.primaryColor,
+                                            decoration: BoxDecoration(
+                                              color: lastUpdateWasBle ? Colors.blueAccent.withOpacity(0.2) : SigapTheme.primaryColor.withOpacity(0.2),
                                               shape: BoxShape.circle,
-                                              boxShadow: [
-                                                BoxShadow(color: SigapTheme.primaryColor, blurRadius: 12),
-                                              ],
                                             ),
-                                            child: const Icon(Icons.person_pin_circle_rounded, color: Colors.white),
+                                            alignment: Alignment.center,
+                                            child: Container(
+                                              width: 32,
+                                              height: 32,
+                                              decoration: BoxDecoration(
+                                                color: lastUpdateWasBle ? Colors.blueAccent : SigapTheme.primaryColor,
+                                                shape: BoxShape.circle,
+                                                boxShadow: [
+                                                  BoxShadow(
+                                                    color: lastUpdateWasBle ? Colors.blueAccent : SigapTheme.primaryColor,
+                                                    blurRadius: 12,
+                                                    spreadRadius: 2,
+                                                  ),
+                                                ],
+                                              ),
+                                              child: Icon(
+                                                lastUpdateWasBle ? Icons.bluetooth_audio_rounded : Icons.person_pin_circle_rounded,
+                                                color: Colors.white,
+                                                size: 18,
+                                              ),
+                                            ),
                                           ),
                                         ),
+                                        ...reidMarkers,
                                       ],
                                     ),
                                   ],
@@ -562,6 +707,75 @@ class _ReportDetailScreenState extends State<ReportDetailScreen> {
                                           },
                                     icon: const Icon(Icons.send_rounded, size: 16),
                                     label: const Text('KIRIM UNIT PATROLI SEKARANG', style: TextStyle(fontWeight: FontWeight.bold, fontSize: 12, letterSpacing: 0.5)),
+                                  ),
+                                ],
+                              ],
+                            ),
+                          ),
+                          const SizedBox(height: 20),
+                          _buildSectionTitle('AI SUSPECT ESCAPE & RE-ID ANALYSIS'),
+                          const SizedBox(height: 8),
+                          GlassCard(
+                            opacity: 0.05,
+                            child: Column(
+                              crossAxisAlignment: CrossAxisAlignment.stretch,
+                              children: [
+                                if (state.predictedRoutes.isEmpty && state.reidPredictions.isEmpty) ...[
+                                  const Text(
+                                    'Analisis pelarian dan Re-ID CCTV belum dijalankan untuk insiden ini.',
+                                    style: TextStyle(fontSize: 11, color: Colors.white70),
+                                  ),
+                                  const SizedBox(height: 12),
+                                  ElevatedButton.icon(
+                                    style: ElevatedButton.styleFrom(
+                                      backgroundColor: Colors.amber,
+                                      foregroundColor: Colors.black,
+                                      padding: const EdgeInsets.symmetric(vertical: 14),
+                                      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
+                                    ),
+                                    onPressed: () {
+                                      context.read<DashboardBloc>().add(
+                                        FetchSuspectAnalysisEvent(
+                                          startNode: 'simpang_dago',
+                                          headingNode: 'dago_atas',
+                                          suspectFeatures: 'helm_merah_jaket_hitam_honda_beat',
+                                        ),
+                                      );
+                                    },
+                                    icon: const Icon(Icons.analytics_rounded, size: 16),
+                                    label: const Text('JALANKAN ANALISIS TERSANGKA', style: TextStyle(fontWeight: FontWeight.bold, fontSize: 11)),
+                                  ),
+                                ] else ...[
+                                  Row(
+                                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                                    children: [
+                                      const Text(
+                                        'ANALISIS AI AKTIF',
+                                        style: TextStyle(fontWeight: FontWeight.bold, fontSize: 11, color: Colors.amber),
+                                      ),
+                                      IconButton(
+                                        icon: const Icon(Icons.refresh_rounded, color: Colors.amber, size: 16),
+                                        onPressed: () {
+                                          context.read<DashboardBloc>().add(
+                                            FetchSuspectAnalysisEvent(
+                                              startNode: 'simpang_dago',
+                                              headingNode: 'dago_atas',
+                                              suspectFeatures: 'helm_merah_jaket_hitam_honda_beat',
+                                            ),
+                                          );
+                                        },
+                                      )
+                                    ],
+                                  ),
+                                  const SizedBox(height: 8),
+                                  Text(
+                                    '• Rute Pelarian Terdeteksi: ${state.predictedRoutes.length} rute potensial.',
+                                    style: const TextStyle(fontSize: 11, color: Colors.white70),
+                                  ),
+                                  const SizedBox(height: 4),
+                                  Text(
+                                    '• CCTV Re-ID Lintas Kamera: ${state.reidPredictions.length} persimpangan aktif.',
+                                    style: const TextStyle(fontSize: 11, color: Colors.white70),
                                   ),
                                 ],
                               ],

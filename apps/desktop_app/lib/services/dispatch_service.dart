@@ -46,6 +46,65 @@ class DispatchService {
     return [];
   }
 
+  // Get CCTV Alert logs
+  Future<List<dynamic>> getCctvAlerts(String cameraId) async {
+    if (_token == null) throw Exception('Not authenticated');
+    final response = await http.get(
+      Uri.parse('$baseUrl/api/cctv/$cameraId/alerts'),
+      headers: {
+        'Authorization': 'Bearer $_token',
+      },
+    );
+    final data = jsonDecode(response.body);
+    if (response.statusCode == 200 && data['status'] == 'success') {
+      return data['data']['alerts'];
+    }
+    return [];
+  }
+
+  // Get AI Escape Prediction (F-08 GNN Escape routes)
+  Future<List<dynamic>> getEscapePrediction(String startNode, String headingNode) async {
+    try {
+      final response = await http.post(
+        Uri.parse('http://localhost:3002/ai/escape-prediction'),
+        headers: {'Content-Type': 'application/json'},
+        body: jsonEncode({
+          'start_node': startNode,
+          'heading_node': headingNode,
+          'max_minutes': 10.0,
+        }),
+      );
+      if (response.statusCode == 200) {
+        final data = jsonDecode(response.body);
+        return data['predicted_routes'] ?? [];
+      }
+    } catch (e) {
+      print('Failed to fetch escape prediction from AI Server: $e');
+    }
+    return [];
+  }
+
+  // Get AI GNN Re-ID Tracking
+  Future<List<dynamic>> getReidTracking(String startNode, String suspectFeatures) async {
+    try {
+      final response = await http.post(
+        Uri.parse('http://localhost:3002/ai/reid-tracking'),
+        headers: {'Content-Type': 'application/json'},
+        body: jsonEncode({
+          'start_node': startNode,
+          'suspect_features': suspectFeatures,
+        }),
+      );
+      if (response.statusCode == 200) {
+        final data = jsonDecode(response.body);
+        return data['reid_predictions'] ?? [];
+      }
+    } catch (e) {
+      print('Failed to fetch Re-ID GNN tracking from AI Server: $e');
+    }
+    return [];
+  }
+
   // Get CCTV Cameras List
   Future<List<dynamic>> getCctvCameras() async {
     if (_token == null) throw Exception('Not authenticated');

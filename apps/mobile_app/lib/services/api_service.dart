@@ -1,6 +1,9 @@
+import 'dart:async';
 import 'dart:convert';
 import 'package:http/http.dart' as http;
 import 'package:socket_io_client/socket_io_client.dart' as io;
+import 'package:geolocator/geolocator.dart';
+import 'package:sensors_plus/sensors_plus.dart';
 import '../database/local_database.dart';
 
 class ApiService {
@@ -9,6 +12,10 @@ class ApiService {
   io.Socket? _socket;
   String? _token;
   String? _userId;
+
+  // Stream to broadcast community proximity alerts
+  final StreamController<Map<String, dynamic>> _communityAlertController = StreamController<Map<String, dynamic>>.broadcast();
+  Stream<Map<String, dynamic>> get communityAlerts => _communityAlertController.stream;
 
   ApiService({required this.database});
 
@@ -118,6 +125,11 @@ class ApiService {
         'userId': _userId,
         'role': 'CITIZEN',
       });
+    });
+
+    _socket!.on('community_alert', (data) {
+      print('Received community alert: $data');
+      _communityAlertController.add(Map<String, dynamic>.from(data));
     });
 
     _socket!.onDisconnect((_) => print('Disconnected from Socket.io server'));
@@ -288,5 +300,56 @@ class ApiService {
   void dispose() {
     _socket?.disconnect();
     _socket?.dispose();
+    _communityAlertController.close();
+  }
+
+  // Real-time: Get continuous position stream
+  Stream<Position> getPositionStream() {
+    return Geolocator.getPositionStream(
+      locationSettings: const LocationSettings(
+        accuracy: LocationAccuracy.high,
+        distanceFilter: 5,
+      ),
+    );
+  }
+
+  // Get current one-shot location
+  Future<Position> getCurrentPosition() async {
+    return await Geolocator.getCurrentPosition(
+      desiredAccuracy: LocationAccuracy.high,
+      timeLimit: const Duration(seconds: 3),
+    );
+  }
+
+  // Get continuous accelerometer events
+  Stream<UserAccelerometerEvent> getAccelerometerEvents() {
+    return userAccelerometerEvents;
+  }
+
+  // Send BLE relay coordinate package to server (PRD F-03 BLE Mesh Tracking)
+  Future<Map<String, dynamic>> sendBleRelay({
+    required String beaconId,
+    required double latitude,
+    required double longitude,
+  }) async {
+    try {
+      final response = await http.post(
+        Uri.parse('$baseUrl/api/reports/ble-relay'),
+        headers: {
+          'Content-Type': 'application/json',
+          if (_token != null) 'Authorization': 'Bearer $_token',
+        },
+        body: jsonEncode({
+          'beacon_id': beaconId,
+          'latitude': latitude,
+          'longitude': longitude,
+          'relay_user_id': _userId,
+        }),
+      );
+      return jsonDecode(response.body);
+    } catch (e) {
+      print('Failed to send BLE relay coordinates to server: $e');
+      return {'status': 'error', 'message': e.toString()};
+    }
   }
 }

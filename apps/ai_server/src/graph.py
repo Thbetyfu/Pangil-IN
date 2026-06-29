@@ -94,4 +94,61 @@ class StreetGraph:
                 self._dfs_search(neighbor, new_cost, path, max_cost, results)
                 path.pop()
 
+    # Node coordinates for SIGAP desktop mini-map rendering
+    node_coordinates = {
+        "simpang_dago": {"latitude": -6.90344, "longitude": 107.61872},
+        "dago_bawah": {"latitude": -6.90844, "longitude": 107.61872},
+        "dago_atas": {"latitude": -6.89844, "longitude": 107.61872},
+        "dipatiukur": {"latitude": -6.90344, "longitude": 107.61472},
+        "siliwangi": {"latitude": -6.90344, "longitude": 107.62272},
+        "cihampelas": {"latitude": -6.90344, "longitude": 107.62672},
+        "flyover_pasupati": {"latitude": -6.90644, "longitude": 107.61472},
+        "merdeka": {"latitude": -6.91144, "longitude": 107.61872}
+    }
+
+    def simulate_gnn_reid(self, start_node: str, suspect_features: str) -> Dict[str, Any]:
+        """
+        Simulates a Graph Neural Network (GNN) neighborhood aggregation to calculate 
+        re-identification (Re-ID) confidence levels across intersections (nodes) 
+        relative to the initial trigger site.
+        """
+        if start_node not in self.graph:
+            return {"status": "error", "message": f"Start node {start_node} not found in graph"}
+
+        # Message passing layers: initialize scores
+        node_scores = {node: 0.0 for node in self.graph.keys()}
+        node_scores[start_node] = 0.95 # Trigger node starts high
+
+        # Layer 1 message passing (to immediate neighbors)
+        for neighbor in self.graph[start_node].keys():
+            node_scores[neighbor] += 0.70 / len(self.graph[start_node])
+
+        # Layer 2 message passing (to neighbors of neighbors)
+        for neighbor in self.graph[start_node].keys():
+            for n2 in self.graph.get(neighbor, {}).keys():
+                if n2 != start_node:
+                    node_scores[n2] += 0.40 / len(self.graph[neighbor])
+
+        # Normalize and package results with coordinate data
+        node_predictions = []
+        for node, score in node_scores.items():
+            normalized_score = min(0.95, round(score, 2))
+            if normalized_score >= 0.15:
+                coords = self.node_coordinates.get(node, {"latitude": -6.90344, "longitude": 107.61872})
+                node_predictions.append({
+                    "node_id": node,
+                    "node_name": node.replace("_", " ").title(),
+                    "latitude": coords["latitude"],
+                    "longitude": coords["longitude"],
+                    "reid_probability": normalized_score,
+                    "matched_features": suspect_features
+                })
+
+        node_predictions.sort(key=lambda x: x["reid_probability"], reverse=True)
+        return {
+            "start_node": start_node,
+            "suspect_features": suspect_features,
+            "reid_predictions": node_predictions
+        }
+
 street_graph = StreetGraph()
