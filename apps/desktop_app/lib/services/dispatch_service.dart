@@ -46,6 +46,54 @@ class DispatchService {
     return [];
   }
 
+  // Get CCTV Cameras List
+  Future<List<dynamic>> getCctvCameras() async {
+    if (_token == null) throw Exception('Not authenticated');
+    final response = await http.get(
+      Uri.parse('$baseUrl/api/cctv'),
+      headers: {
+        'Authorization': 'Bearer $_token',
+      },
+    );
+    final data = jsonDecode(response.body);
+    if (response.statusCode == 200 && data['status'] == 'success') {
+      return data['data']['cameras'];
+    }
+    return [];
+  }
+
+  // Get Patrol Units List
+  Future<List<dynamic>> getPatrolUnits() async {
+    if (_token == null) throw Exception('Not authenticated');
+    final response = await http.get(
+      Uri.parse('$baseUrl/api/patrol'),
+      headers: {
+        'Authorization': 'Bearer $_token',
+      },
+    );
+    final data = jsonDecode(response.body);
+    if (response.statusCode == 200 && data['status'] == 'success') {
+      return data['data']['units'];
+    }
+    return [];
+  }
+
+  // Update CCTV FPS Mode
+  Future<Map<String, dynamic>> updateCctvFps(String cameraId, String fpsMode) async {
+    if (_token == null) throw Exception('Not authenticated');
+    final response = await http.patch(
+      Uri.parse('$baseUrl/api/cctv/$cameraId/fps'),
+      headers: {
+        'Content-Type': 'application/json',
+        'Authorization': 'Bearer $_token',
+      },
+      body: jsonEncode({
+        'fps_mode': fpsMode,
+      }),
+    );
+    return jsonDecode(response.body);
+  }
+
   // Dispatch / Assign Patrol Unit to Report
   Future<Map<String, dynamic>> assignPatrolUnit(String reportId, String patrolUnitId) async {
     if (_token == null) throw Exception('Not authenticated');
