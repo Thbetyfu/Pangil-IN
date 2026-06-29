@@ -1,0 +1,14 @@
+{
+  "name": "panggil-in",
+  "version": "1.0.0",
+  "private": true,
+  "description": "Unified Monorepo for Panggil-In system",
+  "workspaces": [
+    "apps/*"
+  ],
+  "scripts": {
+    "backend:dev": "npm --prefix apps/backend run dev",
+    "backend:build": "npm --prefix apps/backend run build",
+    "backend:start": "npm --prefix apps/backend run start"
+  }
+}

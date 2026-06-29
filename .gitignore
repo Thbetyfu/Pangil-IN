@@ -1,0 +1,61 @@
+# Dependency directories
+node_modules/
+jspm_packages/
+web_members/
+apps/backend/node_modules/
+apps/mobile_app/.dart_tool/
+apps/mobile_app/build/
+
+# Build outputs
+dist/
+build/
+bin/
+obj/
+out/
+apps/backend/dist/
+apps/mobile_app/build/
+
+# Environment files
+.env
+.env.local
+.env.development.local
+.env.test.local
+.env.production.local
+*.env
+
+# IDE / Editor configuration
+.idea/
+.vscode/
+*.suo
+*.ntvs*
+*.njsproj
+*.sln
+*.sw?
+*.iml
+
+# Flutter specific
+.dart_tool/
+.flutter-plugins
+.flutter-plugins-dependencies
+.packages
+apps/mobile_app/.flutter-plugins
+apps/mobile_app/.flutter-plugins-dependencies
+apps/mobile_app/.dart_tool/
+
+# Logs
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+.pnpm-debug.log*
+logs
+*.log
+
+# System files
+.DS_Store
+Thumbs.db
+
+# Project-specific large files
+*.zip
+*.rar
+*.tar.gz
+Tahap1_ Pengumpulan tanggal 27 April 2026-20260628T151719Z-3-001.zip

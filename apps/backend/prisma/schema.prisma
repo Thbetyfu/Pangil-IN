@@ -1,0 +1,87 @@
+datasource db {
+  provider = "sqlite"
+  url      = env("DATABASE_URL")
+}
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+model User {
+  id               String   @id @default(uuid())
+  email            String   @unique
+  password         String
+  name             String
+  phone            String   @unique
+  role             String   @default("CITIZEN") // "CITIZEN", "POLICE_OPERATOR", "SUPERADMIN"
+  reputation_score Float    @default(100.00)
+  riding_mode      Boolean  @default(false)
+  created_at       DateTime @default(now())
+  updated_at       DateTime @updatedAt
+  reports          Report[]
+
+  @@map("users")
+}
+
+model Report {
+  id                  String      @id @default(uuid())
+  reporter_id         String
+  reporter            User        @relation(fields: [reporter_id], references: [id], onDelete: Cascade)
+  type                String      // "SOS_VOICE", "VISUAL_REPORT"
+  status              String      @default("PENDING") // "PENDING", "VALIDATED", "ON_PROCESS", "RESOLVED", "REJECTED"
+  urgency             String      @default("MEDIUM") // "LOW", "MEDIUM", "HIGH", "CRITICAL"
+  description         String?
+  audio_url           String?
+  image_url           String?
+  latitude            Float
+  longitude           Float
+  is_spoofed          Boolean     @default(false)
+  anti_spoofing_score Float       @default(1.00)
+  assigned_unit_id    String?
+  assigned_unit       PatrolUnit? @relation(fields: [assigned_unit_id], references: [id], onDelete: SetNull)
+  created_at          DateTime    @default(now())
+  updated_at          DateTime    @updatedAt
+
+  @@map("reports")
+}
+
+model CCTVCamera {
+  id         String      @id @default(uuid())
+  name       String
+  stream_url String
+  latitude   Float
+  longitude  Float
+  fps_mode   String      @default("LOW") // "LOW", "HIGH"
+  status     String      @default("ACTIVE") // "ACTIVE", "INACTIVE", "MAINTENANCE"
+  created_at DateTime    @default(now())
+  alerts     CCTVAlert[]
+
+  @@map("cctv_cameras")
+}
+
+model CCTVAlert {
+  id                     String     @id @default(uuid())
+  cctv_id                String
+  cctv                   CCTVCamera @relation(fields: [cctv_id], references: [id], onDelete: Cascade)
+  status                 String     @default("UNVERIFIED") // "UNVERIFIED", "VALIDATED_CRIME", "FALSE_ALARM"
+  confidence             Float
+  snapshot_url           String
+  video_clip_url         String?
+  suspect_feature_vector String?
+  created_at             DateTime   @default(now())
+
+  @@map("cctv_alerts")
+}
+
+model PatrolUnit {
+  id         String   @id @default(uuid())
+  name       String
+  latitude   Float
+  longitude  Float
+  status     String   @default("AVAILABLE") // "AVAILABLE", "ON_DUTY", "OFFLINE"
+  phone      String
+  updated_at DateTime @updatedAt
+  reports    Report[]
+
+  @@map("patrol_units")
+}
