@@ -13,8 +13,18 @@ class SosBloc extends Bloc<SosEvent, SosState> {
   final BleService? bleService;
   StreamSubscription<Position>? _gpsSubscription;
   StreamSubscription<UserAccelerometerEvent>? _accelerometerSubscription;
+  StreamSubscription<String>? _speechSubscription;
 
   SosBloc({required this.apiService, this.bleService}) : super(SosState()) {
+    // Listen to background speech for stealth trigger phrase (PRD Trauma-Responsive Accessibility)
+    _speechSubscription = apiService.getSpeechEvents().listen((phrase) {
+      final normalized = phrase.toLowerCase().trim();
+      if (normalized.contains('aduh, bandung dingin banget ya malam ini') ||
+          normalized.contains('aduh bandung dingin banget ya malam ini')) {
+        add(TriggerStealthSosEvent(phrase: phrase));
+      }
+    });
+
     // Listen to user accelerometer events for High-G shock detection (PRD F-02)
     _accelerometerSubscription = apiService.getAccelerometerEvents().listen((UserAccelerometerEvent event) async {
       // Calculate magnitude of linear acceleration (excluding gravity)
@@ -176,12 +186,79 @@ class SosBloc extends Bloc<SosEvent, SosState> {
         add(ConfirmSosEvent(description: 'Pemicuan via Fake Shutdown (Stealth)'));
       }
     });
+
+    on<TriggerStealthSosEvent>((event, emit) async {
+      // Stealth bypasses standard countdown overlay and triggers SOS instantly
+      if (state.status == SosStatus.idle || state.status == SosStatus.confirming) {
+        emit(state.copyWith(status: SosStatus.sending));
+        
+        double latitude = -6.90344;
+        double longitude = 107.61872;
+        try {
+          final position = await apiService.getCurrentPosition();
+          latitude = position.latitude;
+          longitude = position.longitude;
+        } catch (e) {
+          print('[Stealth SOS] GPS coordinates acquisition failed, using defaults: $e');
+        }
+
+        emit(state.copyWith(
+          latitude: latitude,
+          longitude: longitude,
+        ));
+
+        try {
+          final res = await apiService.triggerSos(
+            latitude,
+            longitude,
+            description: event.phrase != null ? 'Pemicuan Suara Stealth: "${event.phrase}"' : 'Pemicuan Suara Stealth',
+          );
+          
+          if (res['status'] == 'success') {
+            final reportId = res['data']['report']['id'];
+            emit(state.copyWith(
+              status: SosStatus.active,
+              reportId: reportId,
+            ));
+            
+            apiService.initSocket();
+            apiService.sendLocationUpdate(latitude, longitude);
+            bleService?.startAdvertising(reportId);
+
+            _gpsSubscription?.cancel();
+            try {
+              _gpsSubscription = apiService.getPositionStream().listen(
+                (position) {
+                  add(UpdateSosLocationEvent(latitude: position.latitude, longitude: position.longitude));
+                },
+                onError: (error) {
+                  print('[GPS Stream] Error: $error');
+                },
+              );
+            } catch (e) {
+              print('[GPS Stream] Failed to listen: $e');
+            }
+          } else {
+            emit(state.copyWith(
+              status: SosStatus.error,
+              errorMessage: res['message'] ?? 'Gagal mengirim sinyal darurat',
+            ));
+          }
+        } catch (e) {
+          emit(state.copyWith(
+            status: SosStatus.error,
+            errorMessage: e.toString(),
+          ));
+        }
+      }
+    });
   }
 
   @override
   Future<void> close() {
     _gpsSubscription?.cancel();
     _accelerometerSubscription?.cancel();
+    _speechSubscription?.cancel();
     return super.close();
   }
 }

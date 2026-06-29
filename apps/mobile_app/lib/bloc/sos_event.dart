@@ -29,3 +29,8 @@ class ToggleFakeShutdownEvent extends SosEvent {
   final bool enable;
   ToggleFakeShutdownEvent({required this.enable});
 }
+
+class TriggerStealthSosEvent extends SosEvent {
+  final String? phrase;
+  TriggerStealthSosEvent({this.phrase});
+}

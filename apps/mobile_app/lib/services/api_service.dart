@@ -301,6 +301,7 @@ class ApiService {
     _socket?.disconnect();
     _socket?.dispose();
     _communityAlertController.close();
+    _speechController.close();
   }
 
   // Real-time: Get continuous position stream
@@ -324,6 +325,14 @@ class ApiService {
   // Get continuous accelerometer events
   Stream<UserAccelerometerEvent> getAccelerometerEvents() {
     return userAccelerometerEvents;
+  }
+
+  // Speech event stream controller for trauma-responsive accessibility (Stealth triggers)
+  final StreamController<String> _speechController = StreamController<String>.broadcast();
+  Stream<String> getSpeechEvents() => _speechController.stream;
+
+  void simulateSpeechInput(String phrase) {
+    _speechController.add(phrase);
   }
 
   // Send BLE relay coordinate package to server (PRD F-03 BLE Mesh Tracking)

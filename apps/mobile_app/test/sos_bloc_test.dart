@@ -229,4 +229,26 @@ void main() {
     // Verify it is blocked and status remains idle
     expect(sosBloc.state.status, SosStatus.idle);
   });
+
+  test('Stealth voice command triggers SOS immediately bypassing countdown', () async {
+    // Simulate speaking the trigger phrase
+    mockApiService.simulateSpeechInput('Aduh, Bandung dingin banget ya malam ini');
+
+    // Wait for async stream & event loop to complete
+    await pumpEventQueue();
+
+    // Expect status to immediately become active (bypassing confirming status)
+    expect(sosBloc.state.status, SosStatus.active);
+    expect(sosBloc.state.reportId, equals('mock-report-id-12345'));
+  });
+
+  test('Non-trigger voice phrase is ignored', () async {
+    // Simulate speaking a normal phrase
+    mockApiService.simulateSpeechInput('Bandung malam ini cukup sejuk ya');
+
+    await pumpEventQueue();
+
+    // Verify status remains idle
+    expect(sosBloc.state.status, SosStatus.idle);
+  });
 }
