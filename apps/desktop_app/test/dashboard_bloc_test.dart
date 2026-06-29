@@ -221,4 +221,29 @@ void main() {
       ),
     );
   });
+
+  test('CctvFpsChangedReceivedEvent updates the specific camera\'s fps_mode (F-07)', () {
+    // Populate cache with a mock CCTV camera in Low mode
+    dashboardBloc.emit(dashboardBloc.state.copyWith(
+      cctvCameras: [
+        {'id': 'cctv-dago-11', 'name': 'CCTV Dago 01', 'fps_mode': 'LOW'}
+      ],
+    ));
+
+    // Dispatch event to escalate to HIGH
+    dashboardBloc.add(CctvFpsChangedReceivedEvent({
+      'id': 'cctv-dago-11',
+      'fps_mode': 'HIGH',
+    }));
+
+    expect(
+      dashboardBloc.stream,
+      emitsThrough(
+        predicate<DashboardState>((state) {
+          final cam = state.cctvCameras.firstWhere((c) => c['id'] == 'cctv-dago-11');
+          return cam['fps_mode'] == 'HIGH';
+        }),
+      ),
+    );
+  });
 }

@@ -65,3 +65,8 @@ class FetchSuspectAnalysisEvent extends DashboardEvent {
     required this.suspectFeatures,
   });
 }
+
+class CctvFpsChangedReceivedEvent extends DashboardEvent {
+  final Map<String, dynamic> data;
+  CctvFpsChangedReceivedEvent(this.data);
+}

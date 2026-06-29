@@ -14,6 +14,7 @@ class DispatchService {
   Function(Map<String, dynamic>)? onNewReport;
   Function(Map<String, dynamic>)? onGpsUpdate;
   Function(Map<String, dynamic>)? onCctvAlert;
+  Function(Map<String, dynamic>)? onCctvFpsChanged;
 
   // Auth: Login
   Future<Map<String, dynamic>> login(String email, String password) async {
@@ -203,6 +204,11 @@ class DispatchService {
     _socket!.on('cctv_alert', (data) {
       print('SOCKET: CCTV anomaly alert detected by AI server');
       if (onCctvAlert != null) onCctvAlert!(Map<String, dynamic>.from(data));
+    });
+
+    _socket!.on('cctv_fps_changed', (data) {
+      print('SOCKET: CCTV FPS changed alert received');
+      if (onCctvFpsChanged != null) onCctvFpsChanged!(Map<String, dynamic>.from(data));
     });
 
     _socket!.onDisconnect((_) => print('Police dispatch client disconnected'));

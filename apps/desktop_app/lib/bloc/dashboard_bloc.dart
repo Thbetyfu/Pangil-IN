@@ -14,6 +14,7 @@ class DashboardBloc extends Bloc<DashboardEvent, DashboardState> {
     dispatchService.onNewReport = (data) => add(NewReportReceivedEvent(data));
     dispatchService.onGpsUpdate = (data) => add(GpsUpdateReceivedEvent(data));
     dispatchService.onCctvAlert = (data) => add(CctvAlertReceivedEvent(data));
+    dispatchService.onCctvFpsChanged = (data) => add(CctvFpsChangedReceivedEvent(data));
 
     on<LoginEvent>(_onLogin);
     on<LogoutEvent>(_onLogout);
@@ -26,6 +27,7 @@ class DashboardBloc extends Bloc<DashboardEvent, DashboardState> {
     on<NewReportReceivedEvent>(_onNewReportReceived);
     on<GpsUpdateReceivedEvent>(_onGpsUpdateReceived);
     on<CctvAlertReceivedEvent>(_onCctvAlertReceived);
+    on<CctvFpsChangedReceivedEvent>(_onCctvFpsChangedReceived);
     
     // AI Mock / CCTV trigger events
     on<TriggerMockSosEvent>(_onTriggerMockSos);
@@ -289,5 +291,22 @@ class DashboardBloc extends Bloc<DashboardEvent, DashboardState> {
         error: 'Failed to run AI Re-ID / GNN analysis: $e',
       ));
     }
+  }
+
+  void _onCctvFpsChangedReceived(CctvFpsChangedReceivedEvent event, Emitter<DashboardState> emit) {
+    final String cameraId = event.data['id'] ?? event.data['cctvId'];
+    final String fpsMode = event.data['fps_mode'] ?? event.data['fpsMode'];
+
+    final updatedCameras = state.cctvCameras.map((cam) {
+      if (cam['id'] == cameraId) {
+        return {
+          ...cam,
+          'fps_mode': fpsMode,
+        };
+      }
+      return cam;
+    }).toList();
+
+    emit(state.copyWith(cctvCameras: updatedCameras));
   }
 }

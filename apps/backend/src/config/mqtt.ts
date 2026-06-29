@@ -3,6 +3,7 @@ import prisma from './db';
 import { notifyDispatchers } from './socket';
 
 let mqttClient: mqtt.MqttClient;
+const activeCooldownTimers = new Map<string, NodeJS.Timeout>();
 
 /**
  * Initializes the connection to the physical MQTT broker.
@@ -83,6 +84,45 @@ export const initMqtt = (): mqtt.MqttClient => {
               cctv: true,
             },
           });
+
+          // Update camera fps_mode to HIGH in DB (PRD F-07)
+          await prisma.cCTVCamera.update({
+            where: { id: cctvId },
+            data: { fps_mode: 'HIGH' }
+          });
+
+          // Notify dispatchers of the active HIGH FPS mode change
+          notifyDispatchers('cctv_fps_changed', {
+            id: cctvId,
+            fps_mode: 'HIGH'
+          });
+
+          // Cancel existing cooldown timer if any
+          if (activeCooldownTimers.has(cctvId)) {
+            clearTimeout(activeCooldownTimers.get(cctvId)!);
+          }
+
+          // Register 2-minute (120 seconds) cooldown timer to reset back to LOW
+          const timer = setTimeout(async () => {
+            try {
+              await prisma.cCTVCamera.update({
+                where: { id: cctvId },
+                data: { fps_mode: 'LOW' }
+              });
+
+              notifyDispatchers('cctv_fps_changed', {
+                id: cctvId,
+                fps_mode: 'LOW'
+              });
+              
+              activeCooldownTimers.delete(cctvId);
+              console.log(`[CCTV Adaptive] Camera ${cctvId} automatically reset to LOW after 2 minutes`);
+            } catch (err) {
+              console.error(`[CCTV Adaptive] Failed to reset camera ${cctvId} to LOW:`, err);
+            }
+          }, parseInt(process.env.CCTV_COOLDOWN_MS || '120000', 10));
+
+          activeCooldownTimers.set(cctvId, timer);
 
           // Notify police dashboard
           notifyDispatchers('cctv_alert', alert);
