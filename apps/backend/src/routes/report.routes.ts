@@ -6,6 +6,7 @@ import { validate } from '../middlewares/validate';
 import { BadRequestError, NotFoundError } from '../utils/errors';
 import { Role, ReportType, ReportStatus, UrgencyLevel, AuthenticatedRequest } from '../types/enums';
 import { notifyDispatchers, notifyNearbyCitizens, calculateDistance } from '../config/socket';
+import { sosLimiter } from '../middlewares/rateLimit';
 
 const router = Router();
 
@@ -60,6 +61,7 @@ router.get(
 router.post(
   '/',
   authenticate,
+  sosLimiter,
   validate(createReportSchema),
   async (req: Request, res: Response, next: NextFunction): Promise<void> => {
     try {

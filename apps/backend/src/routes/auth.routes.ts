@@ -6,6 +6,7 @@ import prisma from '../config/db';
 import { validate } from '../middlewares/validate';
 import { BadRequestError, UnauthorizedError } from '../utils/errors';
 import { Role } from '../types/enums';
+import { apiTokenLimiter } from '../middlewares/rateLimit';
 
 const router = Router();
 const JWT_SECRET = process.env.JWT_SECRET || 'panggil_in_super_secret_key_change_me_in_production';
@@ -93,6 +94,7 @@ router.post(
 // Login handler
 router.post(
   '/login',
+  apiTokenLimiter,
   validate(loginSchema),
   async (req: Request, res: Response, next: NextFunction): Promise<void> => {
     try {
