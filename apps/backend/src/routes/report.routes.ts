@@ -465,6 +465,10 @@ router.post(
 );
 
 // 8. Stealth SMS Gateway Endpoint (PRD F-03 Stealth SMS Backup)
+// Why: When the victim's device loses internet connection (e.g. turned off by the thief or in poor signal zones),
+// the mobile client falls back to sending periodic silent SMS updates to the command center's SMS gateway.
+// This gateway intercepts the SMS messages and forwards them to this endpoint. The server decrypts the payload
+// to continuously update the active report's coordinates in real-time, maintaining high tracking resilience.
 const stealthSmsSchema = z.object({
   body: z.object({
     sender: z.string(),

@@ -19,6 +19,9 @@ class SosBloc extends Bloc<SosEvent, SosState> {
 
   SosBloc({required this.apiService, this.bleService}) : super(SosState()) {
     // Listen to position stream for automatic riding mode speed detection (PRD F-01 Rule 3)
+    // We use a threshold of 4.167 m/s (~15 km/h) to distinguish active vehicle transit from walking.
+    // Toggling ridingMode dynamically is required to prevent accidental High-G shock triggers
+    // caused by sudden braking or road potholes, thus eliminating false positive SOS dispatches to command center.
     _gpsSpeedSubscription = apiService.getPositionStream().listen((position) {
       if (position.speed > 4.167 && !state.ridingMode) {
         print('GPS Speed detected: ${position.speed} m/s (> 15 km/h). Auto-enabling Riding Mode.');
