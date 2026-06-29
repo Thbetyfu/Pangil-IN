@@ -28,9 +28,21 @@ class EmergencyContacts extends Table {
   Set<Column> get primaryKey => {id};
 }
 
-@DriftDatabase(tables: [CachedReports, EmergencyContacts])
+class BegalHeatmaps extends Table {
+  TextColumn get id => text()();
+  RealColumn get latitude => real()();
+  RealColumn get longitude => real()();
+  RealColumn get intensity => real()();
+  TextColumn get areaName => text()();
+  TextColumn get updatedAt => text()();
+
+  @override
+  Set<Column> get primaryKey => {id};
+}
+
+@DriftDatabase(tables: [CachedReports, EmergencyContacts, BegalHeatmaps])
 class LocalDatabase extends _$LocalDatabase {
-  LocalDatabase() : super(_openConnection());
+  LocalDatabase([QueryExecutor? executor]) : super(executor ?? _openConnection());
 
   @override
   int get schemaVersion => 1;
@@ -66,6 +78,12 @@ class LocalDatabase extends _$LocalDatabase {
   Stream<List<EmergencyContact>> watchAllContacts() => select(emergencyContacts).watch();
   Future<void> insertContact(EmergencyContact contact) => into(emergencyContacts).insertOnConflictUpdate(contact);
   Future<void> deleteContact(String contactId) => (delete(emergencyContacts)..where((tbl) => tbl.id.equals(contactId))).go();
+
+  // BegalHeatmaps CRUD Helpers
+  Future<List<BegalHeatmap>> getAllHeatmaps() => select(begalHeatmaps).get();
+  Stream<List<BegalHeatmap>> watchAllHeatmaps() => select(begalHeatmaps).watch();
+  Future<void> insertHeatmap(BegalHeatmap point) => into(begalHeatmaps).insertOnConflictUpdate(point);
+  Future<void> clearAllHeatmaps() => delete(begalHeatmaps).go();
 }
 
 QueryExecutor _openConnection() {

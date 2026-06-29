@@ -54,6 +54,22 @@ require.cache[socketPath] = {
   paths: [],
 } as any;
 
+const authPath = require.resolve('../middlewares/auth');
+const mockAuth = {
+  authenticate: (req: any, res: any, next: any) => {
+    req.user = { id: 'mock-reporter-id-abc', role: 'CITIZEN' };
+    next();
+  },
+  requireRole: (roles: any) => (req: any, res: any, next: any) => next(),
+};
+require.cache[authPath] = {
+  id: authPath,
+  filename: authPath,
+  loaded: true,
+  exports: mockAuth,
+  paths: [],
+} as any;
+
 // Import Express and register report routes dynamically to prevent hoisting
 const express = require('express');
 const reportRouter = require('./report.routes').default;
@@ -95,6 +111,14 @@ test('BLE Mesh Relay Endpoint (POST /api/reports/ble-relay) works correctly', as
     assert.strictEqual(event.data.reportId, 'mock-report-uuid-xyz');
     assert.strictEqual(event.data.isBleRelay, true);
     assert.strictEqual(event.data.relayName, 'Relay User (relay-us)');
+
+    // Verify Heatmap Endpoint (GET /api/reports/heatmap) (PRD F-07/F-03 Offline Cache)
+    const heatmapResponse = await fetch(`http://localhost:${port}/api/reports/heatmap`);
+    assert.strictEqual(heatmapResponse.status, 200);
+    const heatmapData = (await heatmapResponse.json()) as any;
+    assert.strictEqual(heatmapData.status, 'success');
+    assert.strictEqual(heatmapData.data.points.length, 3);
+    assert.strictEqual(heatmapData.data.points[0].areaName, 'Simpang Dago');
   } finally {
     server.close();
   }

@@ -35,6 +35,27 @@ const assignUnitSchema = z.object({
   }),
 });
 
+// GET Heatmap Points (PRD F-07/F-03 Offline Cache)
+router.get(
+  '/heatmap',
+  authenticate,
+  async (req: Request, res: Response, next: NextFunction): Promise<void> => {
+    try {
+      const heatmapPoints = [
+        { id: 'h-1', latitude: -6.8915, longitude: 107.6161, intensity: 4.5, areaName: 'Simpang Dago' },
+        { id: 'h-2', latitude: -6.8975, longitude: 107.6186, intensity: 3.2, areaName: 'Dipatiukur' },
+        { id: 'h-3', latitude: -6.8902, longitude: 107.6105, intensity: 2.8, areaName: 'Cihampelas' },
+      ];
+      res.status(200).json({
+        status: 'success',
+        data: { points: heatmapPoints },
+      });
+    } catch (error) {
+      next(error);
+    }
+  }
+);
+
 // 1. Create Report (Citizen SOS or Visual Report)
 router.post(
   '/',

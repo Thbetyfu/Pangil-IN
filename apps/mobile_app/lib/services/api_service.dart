@@ -361,4 +361,37 @@ class ApiService {
       return {'status': 'error', 'message': e.toString()};
     }
   }
+
+  // Synchronize begal heatmap data from backend (PRD Database Offline Cache)
+  Future<void> syncHeatmap() async {
+    try {
+      final response = await http.get(
+        Uri.parse('$baseUrl/api/reports/heatmap'),
+        headers: {
+          'Content-Type': 'application/json',
+          if (_token != null) 'Authorization': 'Bearer $_token',
+        },
+      );
+      if (response.statusCode == 200) {
+        final Map<String, dynamic> data = jsonDecode(response.body);
+        if (data['status'] == 'success') {
+          final List<dynamic> points = data['data']['points'];
+          await database.clearAllHeatmaps();
+          for (final p in points) {
+            await database.insertHeatmap(BegalHeatmap(
+              id: p['id'].toString(),
+              latitude: (p['latitude'] as num).toDouble(),
+              longitude: (p['longitude'] as num).toDouble(),
+              intensity: (p['intensity'] as num).toDouble(),
+              areaName: p['areaName'].toString(),
+              updatedAt: DateTime.now().toIso8601String(),
+            ));
+          }
+          print('[Offline Cache] Successfully synchronized begal heatmap data');
+        }
+      }
+    } catch (e) {
+      print('[Offline Cache] Failed to sync heatmap data: $e');
+    }
+  }
 }

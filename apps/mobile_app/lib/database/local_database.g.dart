@@ -823,12 +823,423 @@ class EmergencyContactsCompanion extends UpdateCompanion<EmergencyContact> {
   }
 }
 
+class $BegalHeatmapsTable extends BegalHeatmaps
+    with TableInfo<$BegalHeatmapsTable, BegalHeatmap> {
+  @override
+  final GeneratedDatabase attachedDatabase;
+  final String? _alias;
+  $BegalHeatmapsTable(this.attachedDatabase, [this._alias]);
+  static const VerificationMeta _idMeta = const VerificationMeta('id');
+  @override
+  late final GeneratedColumn<String> id = GeneratedColumn<String>(
+    'id',
+    aliasedName,
+    false,
+    type: DriftSqlType.string,
+    requiredDuringInsert: true,
+  );
+  static const VerificationMeta _latitudeMeta = const VerificationMeta(
+    'latitude',
+  );
+  @override
+  late final GeneratedColumn<double> latitude = GeneratedColumn<double>(
+    'latitude',
+    aliasedName,
+    false,
+    type: DriftSqlType.double,
+    requiredDuringInsert: true,
+  );
+  static const VerificationMeta _longitudeMeta = const VerificationMeta(
+    'longitude',
+  );
+  @override
+  late final GeneratedColumn<double> longitude = GeneratedColumn<double>(
+    'longitude',
+    aliasedName,
+    false,
+    type: DriftSqlType.double,
+    requiredDuringInsert: true,
+  );
+  static const VerificationMeta _intensityMeta = const VerificationMeta(
+    'intensity',
+  );
+  @override
+  late final GeneratedColumn<double> intensity = GeneratedColumn<double>(
+    'intensity',
+    aliasedName,
+    false,
+    type: DriftSqlType.double,
+    requiredDuringInsert: true,
+  );
+  static const VerificationMeta _areaNameMeta = const VerificationMeta(
+    'areaName',
+  );
+  @override
+  late final GeneratedColumn<String> areaName = GeneratedColumn<String>(
+    'area_name',
+    aliasedName,
+    false,
+    type: DriftSqlType.string,
+    requiredDuringInsert: true,
+  );
+  static const VerificationMeta _updatedAtMeta = const VerificationMeta(
+    'updatedAt',
+  );
+  @override
+  late final GeneratedColumn<String> updatedAt = GeneratedColumn<String>(
+    'updated_at',
+    aliasedName,
+    false,
+    type: DriftSqlType.string,
+    requiredDuringInsert: true,
+  );
+  @override
+  List<GeneratedColumn> get $columns => [
+    id,
+    latitude,
+    longitude,
+    intensity,
+    areaName,
+    updatedAt,
+  ];
+  @override
+  String get aliasedName => _alias ?? actualTableName;
+  @override
+  String get actualTableName => $name;
+  static const String $name = 'begal_heatmaps';
+  @override
+  VerificationContext validateIntegrity(
+    Insertable<BegalHeatmap> instance, {
+    bool isInserting = false,
+  }) {
+    final context = VerificationContext();
+    final data = instance.toColumns(true);
+    if (data.containsKey('id')) {
+      context.handle(_idMeta, id.isAcceptableOrUnknown(data['id']!, _idMeta));
+    } else if (isInserting) {
+      context.missing(_idMeta);
+    }
+    if (data.containsKey('latitude')) {
+      context.handle(
+        _latitudeMeta,
+        latitude.isAcceptableOrUnknown(data['latitude']!, _latitudeMeta),
+      );
+    } else if (isInserting) {
+      context.missing(_latitudeMeta);
+    }
+    if (data.containsKey('longitude')) {
+      context.handle(
+        _longitudeMeta,
+        longitude.isAcceptableOrUnknown(data['longitude']!, _longitudeMeta),
+      );
+    } else if (isInserting) {
+      context.missing(_longitudeMeta);
+    }
+    if (data.containsKey('intensity')) {
+      context.handle(
+        _intensityMeta,
+        intensity.isAcceptableOrUnknown(data['intensity']!, _intensityMeta),
+      );
+    } else if (isInserting) {
+      context.missing(_intensityMeta);
+    }
+    if (data.containsKey('area_name')) {
+      context.handle(
+        _areaNameMeta,
+        areaName.isAcceptableOrUnknown(data['area_name']!, _areaNameMeta),
+      );
+    } else if (isInserting) {
+      context.missing(_areaNameMeta);
+    }
+    if (data.containsKey('updated_at')) {
+      context.handle(
+        _updatedAtMeta,
+        updatedAt.isAcceptableOrUnknown(data['updated_at']!, _updatedAtMeta),
+      );
+    } else if (isInserting) {
+      context.missing(_updatedAtMeta);
+    }
+    return context;
+  }
+
+  @override
+  Set<GeneratedColumn> get $primaryKey => {id};
+  @override
+  BegalHeatmap map(Map<String, dynamic> data, {String? tablePrefix}) {
+    final effectivePrefix = tablePrefix != null ? '$tablePrefix.' : '';
+    return BegalHeatmap(
+      id: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}id'],
+      )!,
+      latitude: attachedDatabase.typeMapping.read(
+        DriftSqlType.double,
+        data['${effectivePrefix}latitude'],
+      )!,
+      longitude: attachedDatabase.typeMapping.read(
+        DriftSqlType.double,
+        data['${effectivePrefix}longitude'],
+      )!,
+      intensity: attachedDatabase.typeMapping.read(
+        DriftSqlType.double,
+        data['${effectivePrefix}intensity'],
+      )!,
+      areaName: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}area_name'],
+      )!,
+      updatedAt: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}updated_at'],
+      )!,
+    );
+  }
+
+  @override
+  $BegalHeatmapsTable createAlias(String alias) {
+    return $BegalHeatmapsTable(attachedDatabase, alias);
+  }
+}
+
+class BegalHeatmap extends DataClass implements Insertable<BegalHeatmap> {
+  final String id;
+  final double latitude;
+  final double longitude;
+  final double intensity;
+  final String areaName;
+  final String updatedAt;
+  const BegalHeatmap({
+    required this.id,
+    required this.latitude,
+    required this.longitude,
+    required this.intensity,
+    required this.areaName,
+    required this.updatedAt,
+  });
+  @override
+  Map<String, Expression> toColumns(bool nullToAbsent) {
+    final map = <String, Expression>{};
+    map['id'] = Variable<String>(id);
+    map['latitude'] = Variable<double>(latitude);
+    map['longitude'] = Variable<double>(longitude);
+    map['intensity'] = Variable<double>(intensity);
+    map['area_name'] = Variable<String>(areaName);
+    map['updated_at'] = Variable<String>(updatedAt);
+    return map;
+  }
+
+  BegalHeatmapsCompanion toCompanion(bool nullToAbsent) {
+    return BegalHeatmapsCompanion(
+      id: Value(id),
+      latitude: Value(latitude),
+      longitude: Value(longitude),
+      intensity: Value(intensity),
+      areaName: Value(areaName),
+      updatedAt: Value(updatedAt),
+    );
+  }
+
+  factory BegalHeatmap.fromJson(
+    Map<String, dynamic> json, {
+    ValueSerializer? serializer,
+  }) {
+    serializer ??= driftRuntimeOptions.defaultSerializer;
+    return BegalHeatmap(
+      id: serializer.fromJson<String>(json['id']),
+      latitude: serializer.fromJson<double>(json['latitude']),
+      longitude: serializer.fromJson<double>(json['longitude']),
+      intensity: serializer.fromJson<double>(json['intensity']),
+      areaName: serializer.fromJson<String>(json['areaName']),
+      updatedAt: serializer.fromJson<String>(json['updatedAt']),
+    );
+  }
+  @override
+  Map<String, dynamic> toJson({ValueSerializer? serializer}) {
+    serializer ??= driftRuntimeOptions.defaultSerializer;
+    return <String, dynamic>{
+      'id': serializer.toJson<String>(id),
+      'latitude': serializer.toJson<double>(latitude),
+      'longitude': serializer.toJson<double>(longitude),
+      'intensity': serializer.toJson<double>(intensity),
+      'areaName': serializer.toJson<String>(areaName),
+      'updatedAt': serializer.toJson<String>(updatedAt),
+    };
+  }
+
+  BegalHeatmap copyWith({
+    String? id,
+    double? latitude,
+    double? longitude,
+    double? intensity,
+    String? areaName,
+    String? updatedAt,
+  }) => BegalHeatmap(
+    id: id ?? this.id,
+    latitude: latitude ?? this.latitude,
+    longitude: longitude ?? this.longitude,
+    intensity: intensity ?? this.intensity,
+    areaName: areaName ?? this.areaName,
+    updatedAt: updatedAt ?? this.updatedAt,
+  );
+  BegalHeatmap copyWithCompanion(BegalHeatmapsCompanion data) {
+    return BegalHeatmap(
+      id: data.id.present ? data.id.value : this.id,
+      latitude: data.latitude.present ? data.latitude.value : this.latitude,
+      longitude: data.longitude.present ? data.longitude.value : this.longitude,
+      intensity: data.intensity.present ? data.intensity.value : this.intensity,
+      areaName: data.areaName.present ? data.areaName.value : this.areaName,
+      updatedAt: data.updatedAt.present ? data.updatedAt.value : this.updatedAt,
+    );
+  }
+
+  @override
+  String toString() {
+    return (StringBuffer('BegalHeatmap(')
+          ..write('id: $id, ')
+          ..write('latitude: $latitude, ')
+          ..write('longitude: $longitude, ')
+          ..write('intensity: $intensity, ')
+          ..write('areaName: $areaName, ')
+          ..write('updatedAt: $updatedAt')
+          ..write(')'))
+        .toString();
+  }
+
+  @override
+  int get hashCode =>
+      Object.hash(id, latitude, longitude, intensity, areaName, updatedAt);
+  @override
+  bool operator ==(Object other) =>
+      identical(this, other) ||
+      (other is BegalHeatmap &&
+          other.id == this.id &&
+          other.latitude == this.latitude &&
+          other.longitude == this.longitude &&
+          other.intensity == this.intensity &&
+          other.areaName == this.areaName &&
+          other.updatedAt == this.updatedAt);
+}
+
+class BegalHeatmapsCompanion extends UpdateCompanion<BegalHeatmap> {
+  final Value<String> id;
+  final Value<double> latitude;
+  final Value<double> longitude;
+  final Value<double> intensity;
+  final Value<String> areaName;
+  final Value<String> updatedAt;
+  final Value<int> rowid;
+  const BegalHeatmapsCompanion({
+    this.id = const Value.absent(),
+    this.latitude = const Value.absent(),
+    this.longitude = const Value.absent(),
+    this.intensity = const Value.absent(),
+    this.areaName = const Value.absent(),
+    this.updatedAt = const Value.absent(),
+    this.rowid = const Value.absent(),
+  });
+  BegalHeatmapsCompanion.insert({
+    required String id,
+    required double latitude,
+    required double longitude,
+    required double intensity,
+    required String areaName,
+    required String updatedAt,
+    this.rowid = const Value.absent(),
+  }) : id = Value(id),
+       latitude = Value(latitude),
+       longitude = Value(longitude),
+       intensity = Value(intensity),
+       areaName = Value(areaName),
+       updatedAt = Value(updatedAt);
+  static Insertable<BegalHeatmap> custom({
+    Expression<String>? id,
+    Expression<double>? latitude,
+    Expression<double>? longitude,
+    Expression<double>? intensity,
+    Expression<String>? areaName,
+    Expression<String>? updatedAt,
+    Expression<int>? rowid,
+  }) {
+    return RawValuesInsertable({
+      if (id != null) 'id': id,
+      if (latitude != null) 'latitude': latitude,
+      if (longitude != null) 'longitude': longitude,
+      if (intensity != null) 'intensity': intensity,
+      if (areaName != null) 'area_name': areaName,
+      if (updatedAt != null) 'updated_at': updatedAt,
+      if (rowid != null) 'rowid': rowid,
+    });
+  }
+
+  BegalHeatmapsCompanion copyWith({
+    Value<String>? id,
+    Value<double>? latitude,
+    Value<double>? longitude,
+    Value<double>? intensity,
+    Value<String>? areaName,
+    Value<String>? updatedAt,
+    Value<int>? rowid,
+  }) {
+    return BegalHeatmapsCompanion(
+      id: id ?? this.id,
+      latitude: latitude ?? this.latitude,
+      longitude: longitude ?? this.longitude,
+      intensity: intensity ?? this.intensity,
+      areaName: areaName ?? this.areaName,
+      updatedAt: updatedAt ?? this.updatedAt,
+      rowid: rowid ?? this.rowid,
+    );
+  }
+
+  @override
+  Map<String, Expression> toColumns(bool nullToAbsent) {
+    final map = <String, Expression>{};
+    if (id.present) {
+      map['id'] = Variable<String>(id.value);
+    }
+    if (latitude.present) {
+      map['latitude'] = Variable<double>(latitude.value);
+    }
+    if (longitude.present) {
+      map['longitude'] = Variable<double>(longitude.value);
+    }
+    if (intensity.present) {
+      map['intensity'] = Variable<double>(intensity.value);
+    }
+    if (areaName.present) {
+      map['area_name'] = Variable<String>(areaName.value);
+    }
+    if (updatedAt.present) {
+      map['updated_at'] = Variable<String>(updatedAt.value);
+    }
+    if (rowid.present) {
+      map['rowid'] = Variable<int>(rowid.value);
+    }
+    return map;
+  }
+
+  @override
+  String toString() {
+    return (StringBuffer('BegalHeatmapsCompanion(')
+          ..write('id: $id, ')
+          ..write('latitude: $latitude, ')
+          ..write('longitude: $longitude, ')
+          ..write('intensity: $intensity, ')
+          ..write('areaName: $areaName, ')
+          ..write('updatedAt: $updatedAt, ')
+          ..write('rowid: $rowid')
+          ..write(')'))
+        .toString();
+  }
+}
+
 abstract class _$LocalDatabase extends GeneratedDatabase {
   _$LocalDatabase(QueryExecutor e) : super(e);
   $LocalDatabaseManager get managers => $LocalDatabaseManager(this);
   late final $CachedReportsTable cachedReports = $CachedReportsTable(this);
   late final $EmergencyContactsTable emergencyContacts =
       $EmergencyContactsTable(this);
+  late final $BegalHeatmapsTable begalHeatmaps = $BegalHeatmapsTable(this);
   @override
   Iterable<TableInfo<Table, Object?>> get allTables =>
       allSchemaEntities.whereType<TableInfo<Table, Object?>>();
@@ -836,6 +1247,7 @@ abstract class _$LocalDatabase extends GeneratedDatabase {
   List<DatabaseSchemaEntity> get allSchemaEntities => [
     cachedReports,
     emergencyContacts,
+    begalHeatmaps,
   ];
 }
 
@@ -1294,6 +1706,227 @@ typedef $$EmergencyContactsTableProcessedTableManager =
       EmergencyContact,
       PrefetchHooks Function()
     >;
+typedef $$BegalHeatmapsTableCreateCompanionBuilder =
+    BegalHeatmapsCompanion Function({
+      required String id,
+      required double latitude,
+      required double longitude,
+      required double intensity,
+      required String areaName,
+      required String updatedAt,
+      Value<int> rowid,
+    });
+typedef $$BegalHeatmapsTableUpdateCompanionBuilder =
+    BegalHeatmapsCompanion Function({
+      Value<String> id,
+      Value<double> latitude,
+      Value<double> longitude,
+      Value<double> intensity,
+      Value<String> areaName,
+      Value<String> updatedAt,
+      Value<int> rowid,
+    });
+
+class $$BegalHeatmapsTableFilterComposer
+    extends Composer<_$LocalDatabase, $BegalHeatmapsTable> {
+  $$BegalHeatmapsTableFilterComposer({
+    required super.$db,
+    required super.$table,
+    super.joinBuilder,
+    super.$addJoinBuilderToRootComposer,
+    super.$removeJoinBuilderFromRootComposer,
+  });
+  ColumnFilters<String> get id => $composableBuilder(
+    column: $table.id,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<double> get latitude => $composableBuilder(
+    column: $table.latitude,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<double> get longitude => $composableBuilder(
+    column: $table.longitude,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<double> get intensity => $composableBuilder(
+    column: $table.intensity,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get areaName => $composableBuilder(
+    column: $table.areaName,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get updatedAt => $composableBuilder(
+    column: $table.updatedAt,
+    builder: (column) => ColumnFilters(column),
+  );
+}
+
+class $$BegalHeatmapsTableOrderingComposer
+    extends Composer<_$LocalDatabase, $BegalHeatmapsTable> {
+  $$BegalHeatmapsTableOrderingComposer({
+    required super.$db,
+    required super.$table,
+    super.joinBuilder,
+    super.$addJoinBuilderToRootComposer,
+    super.$removeJoinBuilderFromRootComposer,
+  });
+  ColumnOrderings<String> get id => $composableBuilder(
+    column: $table.id,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<double> get latitude => $composableBuilder(
+    column: $table.latitude,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<double> get longitude => $composableBuilder(
+    column: $table.longitude,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<double> get intensity => $composableBuilder(
+    column: $table.intensity,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<String> get areaName => $composableBuilder(
+    column: $table.areaName,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<String> get updatedAt => $composableBuilder(
+    column: $table.updatedAt,
+    builder: (column) => ColumnOrderings(column),
+  );
+}
+
+class $$BegalHeatmapsTableAnnotationComposer
+    extends Composer<_$LocalDatabase, $BegalHeatmapsTable> {
+  $$BegalHeatmapsTableAnnotationComposer({
+    required super.$db,
+    required super.$table,
+    super.joinBuilder,
+    super.$addJoinBuilderToRootComposer,
+    super.$removeJoinBuilderFromRootComposer,
+  });
+  GeneratedColumn<String> get id =>
+      $composableBuilder(column: $table.id, builder: (column) => column);
+
+  GeneratedColumn<double> get latitude =>
+      $composableBuilder(column: $table.latitude, builder: (column) => column);
+
+  GeneratedColumn<double> get longitude =>
+      $composableBuilder(column: $table.longitude, builder: (column) => column);
+
+  GeneratedColumn<double> get intensity =>
+      $composableBuilder(column: $table.intensity, builder: (column) => column);
+
+  GeneratedColumn<String> get areaName =>
+      $composableBuilder(column: $table.areaName, builder: (column) => column);
+
+  GeneratedColumn<String> get updatedAt =>
+      $composableBuilder(column: $table.updatedAt, builder: (column) => column);
+}
+
+class $$BegalHeatmapsTableTableManager
+    extends
+        RootTableManager<
+          _$LocalDatabase,
+          $BegalHeatmapsTable,
+          BegalHeatmap,
+          $$BegalHeatmapsTableFilterComposer,
+          $$BegalHeatmapsTableOrderingComposer,
+          $$BegalHeatmapsTableAnnotationComposer,
+          $$BegalHeatmapsTableCreateCompanionBuilder,
+          $$BegalHeatmapsTableUpdateCompanionBuilder,
+          (
+            BegalHeatmap,
+            BaseReferences<_$LocalDatabase, $BegalHeatmapsTable, BegalHeatmap>,
+          ),
+          BegalHeatmap,
+          PrefetchHooks Function()
+        > {
+  $$BegalHeatmapsTableTableManager(
+    _$LocalDatabase db,
+    $BegalHeatmapsTable table,
+  ) : super(
+        TableManagerState(
+          db: db,
+          table: table,
+          createFilteringComposer: () =>
+              $$BegalHeatmapsTableFilterComposer($db: db, $table: table),
+          createOrderingComposer: () =>
+              $$BegalHeatmapsTableOrderingComposer($db: db, $table: table),
+          createComputedFieldComposer: () =>
+              $$BegalHeatmapsTableAnnotationComposer($db: db, $table: table),
+          updateCompanionCallback:
+              ({
+                Value<String> id = const Value.absent(),
+                Value<double> latitude = const Value.absent(),
+                Value<double> longitude = const Value.absent(),
+                Value<double> intensity = const Value.absent(),
+                Value<String> areaName = const Value.absent(),
+                Value<String> updatedAt = const Value.absent(),
+                Value<int> rowid = const Value.absent(),
+              }) => BegalHeatmapsCompanion(
+                id: id,
+                latitude: latitude,
+                longitude: longitude,
+                intensity: intensity,
+                areaName: areaName,
+                updatedAt: updatedAt,
+                rowid: rowid,
+              ),
+          createCompanionCallback:
+              ({
+                required String id,
+                required double latitude,
+                required double longitude,
+                required double intensity,
+                required String areaName,
+                required String updatedAt,
+                Value<int> rowid = const Value.absent(),
+              }) => BegalHeatmapsCompanion.insert(
+                id: id,
+                latitude: latitude,
+                longitude: longitude,
+                intensity: intensity,
+                areaName: areaName,
+                updatedAt: updatedAt,
+                rowid: rowid,
+              ),
+          withReferenceMapper: (p0) => p0
+              .map((e) => (e.readTable(table), BaseReferences(db, table, e)))
+              .toList(),
+          prefetchHooksCallback: null,
+        ),
+      );
+}
+
+typedef $$BegalHeatmapsTableProcessedTableManager =
+    ProcessedTableManager<
+      _$LocalDatabase,
+      $BegalHeatmapsTable,
+      BegalHeatmap,
+      $$BegalHeatmapsTableFilterComposer,
+      $$BegalHeatmapsTableOrderingComposer,
+      $$BegalHeatmapsTableAnnotationComposer,
+      $$BegalHeatmapsTableCreateCompanionBuilder,
+      $$BegalHeatmapsTableUpdateCompanionBuilder,
+      (
+        BegalHeatmap,
+        BaseReferences<_$LocalDatabase, $BegalHeatmapsTable, BegalHeatmap>,
+      ),
+      BegalHeatmap,
+      PrefetchHooks Function()
+    >;
 
 class $LocalDatabaseManager {
   final _$LocalDatabase _db;
@@ -1302,4 +1935,6 @@ class $LocalDatabaseManager {
       $$CachedReportsTableTableManager(_db, _db.cachedReports);
   $$EmergencyContactsTableTableManager get emergencyContacts =>
       $$EmergencyContactsTableTableManager(_db, _db.emergencyContacts);
+  $$BegalHeatmapsTableTableManager get begalHeatmaps =>
+      $$BegalHeatmapsTableTableManager(_db, _db.begalHeatmaps);
 }

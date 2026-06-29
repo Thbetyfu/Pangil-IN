@@ -7,6 +7,7 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:geolocator/geolocator.dart';
 import '../services/api_service.dart';
 import '../widgets/glass_card.dart';
+import '../database/local_database.dart';
 
 class MapScreen extends StatefulWidget {
   const MapScreen({super.key});
@@ -23,6 +24,7 @@ class _MapScreenState extends State<MapScreen> {
   bool _isLocatingUser = false;
   List<Map<String, dynamic>> _reports = [];
   Map<String, dynamic>? _selectedReport;
+  List<BegalHeatmap> _heatmapPoints = [];
 
   @override
   void initState() {
@@ -33,6 +35,29 @@ class _MapScreenState extends State<MapScreen> {
   Future<void> _initMapAndData() async {
     await _getUserLocation();
     await _fetchNearbyReports();
+    
+    // Offline caching & Sync (PRD Database Offline Cache)
+    if (mounted) {
+      final database = context.read<LocalDatabase>();
+      final apiService = context.read<ApiService>();
+
+      // Load cached heatmap points instantly from SQLite
+      final cachedPoints = await database.getAllHeatmaps();
+      setState(() {
+        _heatmapPoints = cachedPoints;
+      });
+
+      // Synchronize in background from server
+      apiService.syncHeatmap().then((_) async {
+        final freshPoints = await database.getAllHeatmaps();
+        if (mounted) {
+          setState(() {
+            _heatmapPoints = freshPoints;
+          });
+        }
+      });
+    }
+
     if (mounted) {
       setState(() {
         _isLoading = false;
@@ -379,37 +404,23 @@ class _MapScreenState extends State<MapScreen> {
                       userAgentPackageName: 'com.panggilin.app',
                     ),
                     
-                    // B. Heatmap/Red zones layers (Circles with translucent red denoting high crime zones)
+                    // B. Heatmap/Red zones layers (Circles with translucent red denoting high crime zones) (PRD Database Offline Cache)
                     CircleLayer(
-                      circles: [
-                        // Zone 1: Simpang Dago (High Alert Zone)
-                        CircleMarker(
-                          point: const LatLng(-6.8915, 107.6161),
-                          color: const Color(0xFFFF1744).withValues(alpha: 0.16),
-                          borderColor: const Color(0xFFFF1744).withValues(alpha: 0.35),
+                      circles: _heatmapPoints.map((point) {
+                        final isHigh = point.intensity > 4.0;
+                        return CircleMarker(
+                          point: LatLng(point.latitude, point.longitude),
+                          color: isHigh
+                              ? const Color(0xFFFF1744).withOpacity(0.16)
+                              : Colors.red.withOpacity(0.12),
+                          borderColor: isHigh
+                              ? const Color(0xFFFF1744).withOpacity(0.35)
+                              : Colors.red.withOpacity(0.28),
                           borderStrokeWidth: 1.5,
                           useRadiusInMeter: true,
-                          radius: 350,
-                        ),
-                        // Zone 2: Dipatiukur (Medium Alert Zone)
-                        CircleMarker(
-                          point: const LatLng(-6.8975, 107.6186),
-                          color: Colors.red.withValues(alpha: 0.12),
-                          borderColor: Colors.red.withValues(alpha: 0.28),
-                          borderStrokeWidth: 1.5,
-                          useRadiusInMeter: true,
-                          radius: 250,
-                        ),
-                        // Zone 3: Cihampelas (Medium Alert Zone)
-                        CircleMarker(
-                          point: const LatLng(-6.8902, 107.6105),
-                          color: Colors.red.withValues(alpha: 0.12),
-                          borderColor: Colors.red.withValues(alpha: 0.28),
-                          borderStrokeWidth: 1.5,
-                          useRadiusInMeter: true,
-                          radius: 200,
-                        ),
-                      ],
+                          radius: point.intensity * 80.0, // Dynamic radius based on intensity
+                        );
+                      }).toList(),
                     ),
 
                     // C. Interactive Markers Layer (User location + incident pins)
