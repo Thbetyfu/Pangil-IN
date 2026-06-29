@@ -13,10 +13,24 @@ class SosBloc extends Bloc<SosEvent, SosState> {
   final ApiService apiService;
   final BleService? bleService;
   StreamSubscription<Position>? _gpsSubscription;
+  StreamSubscription<Position>? _gpsSpeedSubscription;
   StreamSubscription<UserAccelerometerEvent>? _accelerometerSubscription;
   StreamSubscription<String>? _speechSubscription;
 
   SosBloc({required this.apiService, this.bleService}) : super(SosState()) {
+    // Listen to position stream for automatic riding mode speed detection (PRD F-01 Rule 3)
+    _gpsSpeedSubscription = apiService.getPositionStream().listen((position) {
+      if (position.speed > 4.167 && !state.ridingMode) {
+        print('GPS Speed detected: ${position.speed} m/s (> 15 km/h). Auto-enabling Riding Mode.');
+        add(ToggleRidingModeEvent(enable: true));
+      } else if (position.speed <= 4.167 && state.ridingMode) {
+        print('GPS Speed detected: ${position.speed} m/s (<= 15 km/h). Auto-disabling Riding Mode.');
+        add(ToggleRidingModeEvent(enable: false));
+      }
+    }, onError: (error) {
+      print('[GPS Speed Stream] Error: $error');
+    });
+
     // Listen to background speech for stealth trigger phrase (PRD Trauma-Responsive Accessibility)
     _speechSubscription = apiService.getSpeechEvents().listen((phrase) {
       final normalized = phrase.toLowerCase().trim();
@@ -324,6 +338,7 @@ class SosBloc extends Bloc<SosEvent, SosState> {
   @override
   Future<void> close() {
     _gpsSubscription?.cancel();
+    _gpsSpeedSubscription?.cancel();
     _accelerometerSubscription?.cancel();
     _speechSubscription?.cancel();
     return super.close();

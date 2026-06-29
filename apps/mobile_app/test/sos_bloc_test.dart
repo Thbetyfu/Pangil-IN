@@ -34,22 +34,12 @@ class MockApiService extends ApiService {
   @override
   void sendLocationUpdate(double latitude, double longitude) {}
 
+  final StreamController<Position> positionStreamController =
+      StreamController<Position>.broadcast();
+
   @override
   Stream<Position> getPositionStream() {
-    return Stream<Position>.fromIterable([
-      Position(
-        latitude: -6.90344,
-        longitude: 107.61872,
-        timestamp: DateTime.now(),
-        accuracy: 1.0,
-        altitude: 0.0,
-        altitudeAccuracy: 0.0,
-        heading: 0.0,
-        headingAccuracy: 0.0,
-        speed: 0.0,
-        speedAccuracy: 0.0,
-      ),
-    ]);
+    return positionStreamController.stream;
   }
 
   @override
@@ -94,6 +84,7 @@ void main() {
     await sosBloc.close();
     await database.close();
     await mockApiService.accelerometerController.close();
+    await mockApiService.positionStreamController.close();
   });
 
   test('Initial state is idle with riding mode disabled', () {
@@ -336,4 +327,51 @@ void main() {
       expect(sosBloc.state.status, SosStatus.idle);
     },
   );
+
+  test('GPS speed > 15 km/h auto-enables Riding Mode', () async {
+    expect(sosBloc.state.ridingMode, isFalse);
+
+    // Feed position with speed 5.0 m/s (~18 km/h)
+    mockApiService.positionStreamController.add(Position(
+      latitude: -6.90344,
+      longitude: 107.61872,
+      timestamp: DateTime.now(),
+      accuracy: 1.0,
+      altitude: 0.0,
+      altitudeAccuracy: 0.0,
+      heading: 0.0,
+      headingAccuracy: 0.0,
+      speed: 5.0,
+      speedAccuracy: 0.0,
+    ));
+
+    await pumpEventQueue();
+
+    expect(sosBloc.state.ridingMode, isTrue);
+  });
+
+  test('GPS speed <= 15 km/h auto-disables Riding Mode', () async {
+    // 1. Manually enable Riding Mode first
+    sosBloc.add(ToggleRidingModeEvent(enable: true));
+    await pumpEventQueue();
+    expect(sosBloc.state.ridingMode, isTrue);
+
+    // 2. Feed position with speed 2.0 m/s (~7.2 km/h)
+    mockApiService.positionStreamController.add(Position(
+      latitude: -6.90344,
+      longitude: 107.61872,
+      timestamp: DateTime.now(),
+      accuracy: 1.0,
+      altitude: 0.0,
+      altitudeAccuracy: 0.0,
+      heading: 0.0,
+      headingAccuracy: 0.0,
+      speed: 2.0,
+      speedAccuracy: 0.0,
+    ));
+
+    await pumpEventQueue();
+
+    expect(sosBloc.state.ridingMode, isFalse);
+  });
 }
