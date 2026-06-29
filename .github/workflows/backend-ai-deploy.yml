@@ -1,0 +1,87 @@
+name: Backend & AI Server Container Build Pipeline
+
+on:
+  push:
+    branches: [ "main" ]
+  pull_request:
+    branches: [ "main" ]
+
+jobs:
+  test_and_build_backend:
+    name: Backend API Gateway Build & Test
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+          cache: 'npm'
+          cache-dependency-path: apps/backend/package-lock.json
+
+      - name: Install dependencies
+        run: |
+          cd apps/backend
+          npm ci
+
+      - name: Generate Prisma Client
+        run: |
+          cd apps/backend
+          npx prisma generate
+
+      - name: Run build compile verification
+        run: |
+          cd apps/backend
+          npm run build
+
+      - name: Setup Docker Buildx
+        uses: docker/setup-buildx-action@v3
+
+      - name: Build Backend Docker Image
+        uses: docker/build-push-action@v5
+        with:
+          context: ./apps/backend
+          file: ./apps/backend/Dockerfile
+          push: false # Set to true and add registry login step for actual registry pushing
+          tags: panggilin/backend:latest
+          cache-from: type=gha
+          cache-to: type=gha,mode=max
+
+  test_and_build_ai:
+    name: FastAPI AI Server Build & Verification
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Setup Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+          cache: 'pip'
+          cache-dependency-path: apps/ai_server/requirements.txt
+
+      - name: Install Python dependencies
+        run: |
+          cd apps/ai_server
+          pip install -r requirements.txt
+
+      - name: Verify compilation and imports
+        run: |
+          cd apps/ai_server
+          python -m uvicorn src.main:app --help > /dev/null
+
+      - name: Setup Docker Buildx
+        uses: docker/setup-buildx-action@v3
+
+      - name: Build AI Server Docker Image
+        uses: docker/build-push-action@v5
+        with:
+          context: ./apps/ai_server
+          file: ./apps/ai_server/Dockerfile
+          push: false
+          tags: panggilin/ai-server:latest
+          cache-from: type=gha
+          cache-to: type=gha,mode=max

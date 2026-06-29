@@ -1,0 +1,88 @@
+name: Flutter CI/CD Build Pipeline
+
+on:
+  push:
+    branches: [ "main" ]
+  pull_request:
+    branches: [ "main" ]
+
+jobs:
+  build_mobile_android:
+    name: Build Citizen Mobile App (Android APK)
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Setup Java Development Kit (JDK)
+        uses: actions/setup-java@v4
+        with:
+          distribution: 'zulu'
+          java-version: '17'
+
+      - name: Setup Flutter SDK
+        uses: subosito/flutter-action@v2
+        with:
+          flutter-version: '3.22.x'
+          channel: 'stable'
+          cache: true
+
+      - name: Install dependencies
+        run: |
+          cd apps/mobile_app
+          flutter pub get
+
+      - name: Run unit and widget tests
+        run: |
+          cd apps/mobile_app
+          flutter test
+
+      - name: Build Release APK
+        run: |
+          cd apps/mobile_app
+          flutter build apk --release
+
+      - name: Upload APK artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: citizen-mobile-apk
+          path: apps/mobile_app/build/app/outputs/flutter-apk/app-release.apk
+
+  build_desktop_windows:
+    name: Build SIGAP Police Desktop App (Windows)
+    runs-on: windows-latest
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Setup Flutter SDK
+        uses: subosito/flutter-action@v2
+        with:
+          flutter-version: '3.22.x'
+          channel: 'stable'
+          cache: true
+
+      - name: Install dependencies
+        run: |
+          cd apps/desktop_app
+          flutter pub get
+
+      - name: Run unit and widget tests
+        run: |
+          cd apps/desktop_app
+          flutter test
+
+      - name: Build Windows Application
+        run: |
+          cd apps/desktop_app
+          flutter build windows --release
+
+      - name: Compress Desktop build to ZIP
+        run: |
+          Compress-Archive -Path apps/desktop_app/build/windows/x64/runner/Release/* -DestinationPath apps/desktop_app/build/windows/x64/runner/sigap-desktop-windows.zip
+
+      - name: Upload Windows Desktop Artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: sigap-desktop-zip
+          path: apps/desktop_app/build/windows/x64/runner/sigap-desktop-windows.zip

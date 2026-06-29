@@ -1,14 +1,21 @@
 import os
 import requests
+import time
+import cv2
 from fastapi import FastAPI, HTTPException
 from pydantic import BaseModel
 from typing import Optional, List
 
 from src.graph import street_graph
 from src.detection import simulate_yolo_detection, simulate_deepsort_tracking, simulate_vehicle_reid
+from src.detection_real import RealYoloDetector, CentroidTracker
 from src.spoofing import verify_image_authenticity, verify_audio_authenticity
 
 app = FastAPI(title="Panggil-In AI Inference Server")
+
+# Initialize global detector and tracker
+detector = RealYoloDetector(model_path="models/yolov8n.onnx")
+tracker = CentroidTracker()
 
 class DetectRequest(BaseModel):
     cctv_id: str
@@ -35,6 +42,46 @@ def health():
 
 @app.post("/cctv/detect")
 def cctv_detect(req: DetectRequest):
+    # Try to load frame from local video if it exists
+    video_path = os.path.join(os.path.dirname(__file__), "../../backend/public/cctv_begal.mp4")
+    if os.path.exists(video_path):
+        try:
+            cap = cv2.VideoCapture(video_path)
+            if cap.isOpened():
+                frame_count = int(cap.get(cv2.CAP_PROP_FRAME_COUNT))
+                if frame_count > 0:
+                    # Dynamically roll frame index based on current time
+                    # Multiplier changes the speed of the animation simulation
+                    frame_idx = int(time.time() * 8) % frame_count
+                    cap.set(cv2.CAP_PROP_POS_FRAMES, frame_idx)
+                    ret, frame = cap.read()
+                    if ret and frame is not None:
+                        detections = detector.detect(frame)
+                        
+                        # Update Centroid Tracker with bounding boxes of persons/motorcycles
+                        rects = [d["bbox"] for d in detections if d["class"] in ["person", "motorcycle"]]
+                        tracker.update(rects)
+                        
+                        # Determine if weapon or combat is found
+                        anomaly_detections = [d for d in detections if d["class"] in ["machete", "knife", "pistol", "aggressive_combat"]]
+                        anomaly_detected = len(anomaly_detections) > 0
+                        max_confidence = max([d["confidence"] for d in anomaly_detections]) if anomaly_detections else 0.0
+                        
+                        cap.release()
+                        return {
+                            "cctv_id": req.cctv_id,
+                            "cctv_name": req.cctv_name,
+                            "detections": detections,
+                            "anomaly_detected": anomaly_detected,
+                            "anomaly_confidence": max_confidence,
+                            "fps_mode_recommendation": "HIGH" if anomaly_detected else "LOW",
+                            "source": "opencv_onnx_frame"
+                        }
+            cap.release()
+        except Exception as e:
+            print(f"Error opening video frame, running fallback simulation: {e}")
+
+    # Fallback to simulation
     return simulate_yolo_detection(req.cctv_id, req.cctv_name)
 
 @app.post("/ai/anti-spoofing")
