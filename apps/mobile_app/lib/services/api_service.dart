@@ -5,6 +5,7 @@ import 'package:socket_io_client/socket_io_client.dart' as io;
 import 'package:geolocator/geolocator.dart';
 import 'package:sensors_plus/sensors_plus.dart';
 import '../database/local_database.dart';
+import '../utils/crypto_helper.dart';
 
 class ApiService {
   final LocalDatabase database;
@@ -147,10 +148,42 @@ class ApiService {
   // Real-time: Send location updates (Riding mode / SOS telemetry)
   void sendLocationUpdate(double latitude, double longitude) {
     if (_socket != null && _socket!.connected) {
-      _socket!.emit('update_location', {
-        'latitude': latitude,
-        'longitude': longitude,
-      });
+      try {
+        final encrypted = CryptoHelper.encryptCoordinates(latitude, longitude);
+        _socket!.emit('update_location', {
+          'encrypted_payload': encrypted,
+        });
+        print('[Socket] Sent encrypted location update');
+      } catch (e) {
+        print('Encryption error in sendLocationUpdate: $e');
+        _socket!.emit('update_location', {
+          'latitude': latitude,
+          'longitude': longitude,
+        });
+      }
+    } else {
+      // Offline fallback: Send Stealth SMS to SMS Gateway API (PRD F-03 Rule 3)
+      sendStealthSms(latitude, longitude);
+    }
+  }
+
+  // Send Stealth SMS coordinate payload to backend (PRD F-03 Stealth SMS Backup)
+  Future<Map<String, dynamic>> sendStealthSms(double latitude, double longitude) async {
+    try {
+      final encrypted = CryptoHelper.encryptCoordinates(latitude, longitude);
+      final response = await http.post(
+        Uri.parse('$baseUrl/api/reports/stealth-sms'),
+        headers: {'Content-Type': 'application/json'},
+        body: jsonEncode({
+          'sender': '089876543210', // Seeded citizen phone number
+          'encrypted_payload': encrypted,
+        }),
+      );
+      print('Stealth SMS sent successfully: ${response.body}');
+      return jsonDecode(response.body);
+    } catch (e) {
+      print('Failed to send Stealth SMS: $e');
+      return {'status': 'error', 'message': e.toString()};
     }
   }
 

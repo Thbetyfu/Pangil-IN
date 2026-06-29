@@ -46,7 +46,19 @@ export const initMqtt = (): mqtt.MqttClient => {
       // Handle GPS tracking updates: panggil-in/gps/:reportId
       if (topic.startsWith('panggil-in/gps/')) {
         const reportId = topic.split('/')[2];
-        const { latitude, longitude } = payload;
+        let { latitude, longitude, encrypted_payload } = payload;
+
+        if (encrypted_payload) {
+          try {
+            const { decryptCoordinates } = require('../utils/crypto');
+            const decrypted = decryptCoordinates(encrypted_payload);
+            latitude = decrypted.latitude;
+            longitude = decrypted.longitude;
+            console.log(`[MQTT] Decrypted telemetry coordinates for report ${reportId}: (${latitude}, ${longitude})`);
+          } catch (err: any) {
+            console.error(`[MQTT] Decryption failed for report ${reportId}:`, err.message);
+          }
+        }
 
         if (typeof latitude === 'number' && typeof longitude === 'number') {
           // Update database with latest coordinates

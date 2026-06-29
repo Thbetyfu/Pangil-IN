@@ -13,7 +13,7 @@ const mockPrisma = {
       // Mock finding an active pending report for the citizen
       return {
         id: 'mock-report-uuid-abc',
-        citizen_id: args.where.citizen_id,
+        reporter_id: args.where.reporter_id,
         status: 'PENDING',
       };
     }
@@ -86,10 +86,12 @@ test('Socket-to-MQTT Bridge works correctly when citizen updates location', asyn
   
   await updateLocationHandler({ latitude: -6.90344, longitude: 107.61872 });
 
-  // Assert that coordinates were successfully bridged and published to Mosquitto MQTT
+  // Assert that coordinates were successfully bridged and published to Mosquitto MQTT as encrypted payload
   assert.strictEqual(mockMqttClient.lastPublishedTopic, 'panggil-in/gps/mock-report-uuid-abc');
-  assert.deepStrictEqual(mockMqttClient.lastPublishedPayload, {
-    latitude: -6.90344,
-    longitude: 107.61872,
-  });
+  assert.ok(mockMqttClient.lastPublishedPayload.encrypted_payload, 'Payload must be encrypted');
+  
+  const { decryptCoordinates } = require('../utils/crypto');
+  const decrypted = decryptCoordinates(mockMqttClient.lastPublishedPayload.encrypted_payload);
+  assert.strictEqual(decrypted.latitude, -6.90344);
+  assert.strictEqual(decrypted.longitude, 107.61872);
 });

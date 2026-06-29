@@ -42,12 +42,29 @@ export const initSocket = (server: HttpServer): Server => {
     });
 
     // Update coordinates for proximity notifications (Citizen Riding/Active mode)
-    socket.on('update_location', async (data: { latitude: number; longitude: number }) => {
+    socket.on('update_location', async (data: { latitude?: number; longitude?: number; encrypted_payload?: string }) => {
       const active = activeSockets.get(socket.id);
       if (active) {
-        active.latitude = data.latitude;
-        active.longitude = data.longitude;
-        activeSockets.set(socket.id, active);
+        let lat = data.latitude;
+        let lng = data.longitude;
+
+        if (data.encrypted_payload) {
+          try {
+            const { decryptCoordinates } = require('../utils/crypto');
+            const decrypted = decryptCoordinates(data.encrypted_payload);
+            lat = decrypted.latitude;
+            lng = decrypted.longitude;
+            console.log(`[Socket] Decrypted location update: (${lat}, ${lng})`);
+          } catch (err: any) {
+            console.error('[Socket] Failed to decrypt update_location:', err.message);
+          }
+        }
+
+        if (lat !== undefined && lng !== undefined) {
+          active.latitude = lat;
+          active.longitude = lng;
+          activeSockets.set(socket.id, active);
+        }
 
         // If the socket belongs to a citizen, check if they have any active SOS report
         if (active.role === Role.CITIZEN) {
@@ -55,7 +72,7 @@ export const initSocket = (server: HttpServer): Server => {
             const prisma = require('./db').default;
             const activeReport = await prisma.report.findFirst({
               where: {
-                citizen_id: active.userId,
+                reporter_id: active.userId,
                 status: 'PENDING',
               },
               orderBy: {
@@ -68,11 +85,18 @@ export const initSocket = (server: HttpServer): Server => {
               const mqttClient = getMqttClient();
               if (mqttClient) {
                 const topic = `panggil-in/gps/${activeReport.id}`;
-                mqttClient.publish(topic, JSON.stringify({
-                  latitude: data.latitude,
-                  longitude: data.longitude,
-                }));
-                console.log(`[Socket->MQTT] Bridge: Published location to ${topic}`);
+                let mqttPayload;
+                if (data.encrypted_payload) {
+                  mqttPayload = { encrypted_payload: data.encrypted_payload };
+                } else if (lat !== undefined && lng !== undefined) {
+                  const { encryptCoordinates } = require('../utils/crypto');
+                  mqttPayload = { encrypted_payload: encryptCoordinates(lat, lng) };
+                }
+
+                if (mqttPayload) {
+                  mqttClient.publish(topic, JSON.stringify(mqttPayload));
+                  console.log(`[Socket->MQTT] Bridge: Published ENCRYPTED location to ${topic}`);
+                }
               }
             }
           } catch (err) {

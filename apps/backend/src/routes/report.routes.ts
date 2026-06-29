@@ -464,4 +464,79 @@ router.post(
   }
 );
 
+// 8. Stealth SMS Gateway Endpoint (PRD F-03 Stealth SMS Backup)
+const stealthSmsSchema = z.object({
+  body: z.object({
+    sender: z.string(),
+    encrypted_payload: z.string(),
+  }),
+});
+
+router.post(
+  '/stealth-sms',
+  validate(stealthSmsSchema),
+  async (req: Request, res: Response, next: NextFunction): Promise<void> => {
+    try {
+      const { sender, encrypted_payload } = req.body;
+      const { decryptCoordinates } = require('../utils/crypto');
+
+      // 1. Find citizen by their phone number
+      const citizen = await prisma.user.findFirst({
+        where: { phone: sender, role: Role.CITIZEN },
+      });
+
+      if (!citizen) {
+        throw new NotFoundError('No registered citizen found with this phone number');
+      }
+
+      // 2. Find active SOS report for this citizen
+      const report = await prisma.report.findFirst({
+        where: {
+          reporter_id: citizen.id,
+          status: { in: [ReportStatus.PENDING, ReportStatus.VALIDATED, ReportStatus.ON_PROCESS] },
+        },
+        orderBy: {
+          created_at: 'desc',
+        },
+      });
+
+      if (!report) {
+        throw new NotFoundError('No active SOS report found for this citizen');
+      }
+
+      // 3. Decrypt payload to get coordinates
+      const { latitude, longitude } = decryptCoordinates(encrypted_payload);
+
+      // 4. Update coordinates in database
+      await prisma.report.update({
+        where: { id: report.id },
+        data: { latitude, longitude },
+      });
+
+      // 5. Notify police dispatchers with SMS backup metadata
+      notifyDispatchers('gps_update', {
+        reportId: report.id,
+        latitude,
+        longitude,
+        isSmsBackup: true,
+        updatedAt: new Date(),
+      });
+
+      console.log(`[SMS Gateway] Decrypted Stealth SMS location update from ${sender}: (${latitude}, ${longitude})`);
+
+      res.status(200).json({
+        status: 'success',
+        data: {
+          reportId: report.id,
+          latitude,
+          longitude,
+          isSmsBackup: true,
+        },
+      });
+    } catch (error) {
+      next(error);
+    }
+  }
+);
+
 export default router;
