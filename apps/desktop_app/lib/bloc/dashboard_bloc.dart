@@ -138,7 +138,11 @@ class DashboardBloc extends Bloc<DashboardEvent, DashboardState> {
   }
 
   void _onSelectReport(SelectReportEvent event, Emitter<DashboardState> emit) {
-    emit(state.copyWith(selectedReport: event.report));
+    if (event.report == null) {
+      emit(state.copyWith(clearSelectedReport: true));
+    } else {
+      emit(state.copyWith(selectedReport: event.report));
+    }
   }
 
   Future<void> _onAssignPatrolUnit(
@@ -383,9 +387,11 @@ class DashboardBloc extends Bloc<DashboardEvent, DashboardState> {
 
         // Clear selected report if it matches deleted one
         Map<String, dynamic>? updatedSelected = state.selectedReport;
+        bool clearSelected = false;
         if (state.selectedReport != null &&
             state.selectedReport!['id'] == event.reportId) {
           updatedSelected = null;
+          clearSelected = true;
         }
 
         // Remove from track logs
@@ -396,6 +402,7 @@ class DashboardBloc extends Bloc<DashboardEvent, DashboardState> {
           state.copyWith(
             reports: reports,
             selectedReport: updatedSelected,
+            clearSelectedReport: clearSelected,
             gpsTrackLogs: logs,
           ),
         );

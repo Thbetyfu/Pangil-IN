@@ -138,6 +138,11 @@ class _ProfileScreenState extends State<ProfileScreen> {
 
   @override
   Widget build(BuildContext context) {
+    final apiService = context.read<ApiService>();
+    final String name = apiService.userName ?? 'Budi Santoso';
+    final String email = apiService.userEmail ?? 'citizen@panggilin.com';
+    final double reputation = apiService.reputationScore ?? 95.0;
+
     return Scaffold(
       backgroundColor: const Color(0xFF0F1219),
       appBar: AppBar(
@@ -171,6 +176,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
             ),
             onPressed: () {
               HapticFeedback.mediumImpact();
+              context.read<ApiService>().logout();
               Navigator.pushNamedAndRemoveUntil(
                 context,
                 '/login',
@@ -202,7 +208,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
                       width: 110,
                       height: 110,
                       child: CircularProgressIndicator(
-                        value: 0.95,
+                        value: reputation / 100.0,
                         strokeWidth: 5,
                         backgroundColor: Colors.white.withOpacity(0.05),
                         valueColor: const AlwaysStoppedAnimation<Color>(
@@ -220,10 +226,10 @@ class _ProfileScreenState extends State<ProfileScreen> {
                 ),
               ),
               const SizedBox(height: 16),
-              const Center(
+              Center(
                 child: Text(
-                  'Budi Santoso',
-                  style: TextStyle(
+                  name,
+                  style: const TextStyle(
                     color: Colors.white,
                     fontSize: 18,
                     fontWeight: FontWeight.bold,
@@ -233,7 +239,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
               const SizedBox(height: 4),
               Center(
                 child: Text(
-                  'citizen@panggilin.com',
+                  email,
                   style: TextStyle(
                     color: Colors.white.withOpacity(0.5),
                     fontSize: 13,
@@ -266,7 +272,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
                         crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
                           Text(
-                            'Skor Reputasi Laporan: 95%',
+                            'Skor Reputasi Laporan: ${reputation.toInt()}%',
                             style: TextStyle(
                               color: Colors.white,
                               fontWeight: FontWeight.bold,

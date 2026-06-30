@@ -13,6 +13,10 @@ class ApiService {
   io.Socket? _socket;
   String? _token;
   String? _userId;
+  String? _userName;
+  String? _userEmail;
+  String? _userPhone;
+  double? _reputationScore;
 
   // Stream to broadcast community proximity alerts
   final StreamController<Map<String, dynamic>> _communityAlertController =
@@ -24,6 +28,10 @@ class ApiService {
 
   String? get token => _token;
   String? get userId => _userId;
+  String? get userName => _userName;
+  String? get userEmail => _userEmail;
+  String? get userPhone => _userPhone;
+  double? get reputationScore => _reputationScore;
 
   // Auth: Register
   Future<Map<String, dynamic>> register(
@@ -43,7 +51,16 @@ class ApiService {
         'role': 'CITIZEN',
       }),
     );
-    return jsonDecode(response.body);
+    final data = jsonDecode(response.body);
+    if (response.statusCode == 201 && data['status'] == 'success') {
+      _token = data['data']['token'];
+      _userId = data['data']['user']['id'];
+      _userName = data['data']['user']['name'];
+      _userEmail = data['data']['user']['email'];
+      _userPhone = data['data']['user']['phone'];
+      _reputationScore = (data['data']['user']['reputation_score'] as num?)?.toDouble() ?? 100.0;
+    }
+    return data;
   }
 
   // Auth: Login
@@ -66,8 +83,25 @@ class ApiService {
     if (response.statusCode == 200 && data['status'] == 'success') {
       _token = data['data']['token'];
       _userId = data['data']['user']['id'];
+      _userName = data['data']['user']['name'];
+      _userEmail = data['data']['user']['email'];
+      _userPhone = data['data']['user']['phone'];
+      _reputationScore = (data['data']['user']['reputation_score'] as num?)?.toDouble() ?? 100.0;
     }
     return data;
+  }
+
+  // Auth: Logout
+  void logout() {
+    _token = null;
+    _userId = null;
+    _userName = null;
+    _userEmail = null;
+    _userPhone = null;
+    _reputationScore = null;
+    _socket?.disconnect();
+    _socket?.dispose();
+    _socket = null;
   }
 
   // SOS: Trigger Report

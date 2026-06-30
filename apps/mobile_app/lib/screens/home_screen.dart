@@ -271,6 +271,10 @@ class _HomeScreenState extends State<HomeScreen>
   // --- UI Component Builders ---
 
   Widget _buildHeader(bool ridingMode) {
+    final apiService = context.read<ApiService>();
+    final String name = apiService.userName ?? 'Budi Santoso';
+    final double reputation = apiService.reputationScore ?? 95.0;
+
     return Row(
       mainAxisAlignment: MainAxisAlignment.spaceBetween,
       children: [
@@ -303,7 +307,7 @@ class _HomeScreenState extends State<HomeScreen>
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 Text(
-                  'Halo, Budi Santoso',
+                  'Halo, $name',
                   style: TextStyle(
                     color: Colors.white.withOpacity(0.95),
                     fontSize: 16,
@@ -319,7 +323,7 @@ class _HomeScreenState extends State<HomeScreen>
                     ),
                     const SizedBox(width: 4),
                     Text(
-                      'Reputasi: 95.00 (Baik)',
+                      'Reputasi: ${reputation.toStringAsFixed(2)}',
                       style: TextStyle(
                         color: Colors.white.withOpacity(0.6),
                         fontSize: 12,
