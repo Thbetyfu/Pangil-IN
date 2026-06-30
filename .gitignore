@@ -64,3 +64,16 @@ Tahap1_ Pengumpulan tanggal 27 April 2026-20260628T151719Z-3-001.zip
 __pycache__/
 *.pyc
 
+# Windows temp / AppData paths (should never be tracked)
+%USERP~1/
+**/AppData/
+**/node-compile-cache/
+**/v8-compile-cache/
+**/%USERP~1/
+
+# Flutter tool temp files
+**/flutter_tools.*/
+**/com.alexmercerind.media_kit.*/
+*.dill
+*.incremental.dill
+
