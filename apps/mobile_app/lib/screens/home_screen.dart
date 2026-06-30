@@ -23,30 +23,93 @@ class _HomeScreenState extends State<HomeScreen>
   late AnimationController _waveController;
   DateTime? _volumeUpPressTime;
 
-  // Mock list of nearby incidents in Bandung
-  final List<Map<String, dynamic>> _mockNearbyIncidents = [
-    {
-      'title': 'Aktivitas Mencurigakan',
-      'location': 'Jl. Dago (350m dari posisi Anda)',
-      'time': '5 menit yang lalu',
-      'urgency': 'MEDIUM',
-      'is_spoofed': false,
-    },
-    {
-      'title': 'Begel Motor Terkonfirmasi',
-      'location': 'Jl. Dipatiukur (800m dari posisi Anda)',
-      'time': '12 menit yang lalu',
-      'urgency': 'HIGH',
-      'is_spoofed': false,
-    },
-    {
-      'title': 'Percobaan Pencurian HP',
-      'location': 'Jl. Cihampelas (1.2km dari posisi Anda)',
-      'time': '30 menit yang lalu',
-      'urgency': 'LOW',
-      'is_spoofed': true,
-    },
-  ];
+  List<Map<String, dynamic>> _incidents = [];
+  bool _isLoadingIncidents = true;
+
+  Future<void> _fetchNearbyIncidents() async {
+    if (!mounted) return;
+    setState(() {
+      _isLoadingIncidents = true;
+    });
+
+    try {
+      final apiService = context.read<ApiService>();
+      double lat = -6.8915;
+      double lng = 107.6161;
+
+      // Get user position if geolocator is active
+      try {
+        final pos = await Geolocator.getCurrentPosition(
+          desiredAccuracy: LocationAccuracy.medium,
+          timeLimit: const Duration(seconds: 2),
+        );
+        lat = pos.latitude;
+        lng = pos.longitude;
+      } catch (_) {}
+
+      final result = await apiService.getNearbyReports(lat, lng);
+      if (result['status'] == 'success') {
+        final List<dynamic> reportsList = result['data']['reports'] ?? [];
+        final List<Map<String, dynamic>> mapped = reportsList
+            .map<Map<String, dynamic>>((r) => _mapReportToIncident(r))
+            .toList();
+
+        if (mounted) {
+          setState(() {
+            _incidents = mapped;
+            _isLoadingIncidents = false;
+          });
+        }
+      } else {
+        if (mounted) {
+          setState(() {
+            _isLoadingIncidents = false;
+          });
+        }
+      }
+    } catch (e) {
+      if (mounted) {
+        setState(() {
+          _isLoadingIncidents = false;
+        });
+      }
+    }
+  }
+
+  Map<String, dynamic> _mapReportToIncident(Map<String, dynamic> report) {
+    final type = report['type'] ?? '';
+    final title = type == 'SOS_VOICE' ? 'SOS Suara Terdeteksi' : 'Laporan Visual Warga';
+    final desc = report['description'] ?? 'Tidak ada deskripsi tambahan';
+    final isSpoofed = report['is_spoofed'] == true;
+    final urgency = report['urgency'] ?? 'MEDIUM';
+
+    String timeStr = 'Baru saja';
+    try {
+      final createdAtStr = report['created_at'] ?? report['createdAt'];
+      if (createdAtStr != null) {
+        final createdAt = DateTime.parse(createdAtStr).toLocal();
+        final diff = DateTime.now().difference(createdAt);
+        if (diff.inMinutes < 1) {
+          timeStr = 'Baru saja';
+        } else if (diff.inMinutes < 60) {
+          timeStr = '${diff.inMinutes} mnt lalu';
+        } else if (diff.inHours < 24) {
+          timeStr = '${diff.inHours} jam lalu';
+        } else {
+          timeStr = '${createdAt.day}/${createdAt.month}';
+        }
+      }
+    } catch (_) {}
+
+    return {
+      'title': title,
+      'location': desc,
+      'time': timeStr,
+      'urgency': urgency,
+      'is_spoofed': isSpoofed,
+      'raw_report': report,
+    };
+  }
 
   StreamSubscription<Map<String, dynamic>>? _alertSubscription;
 
@@ -62,10 +125,11 @@ class _HomeScreenState extends State<HomeScreen>
     WidgetsBinding.instance.addPostFrameCallback((_) {
       final apiService = context.read<ApiService>();
       apiService.initSocket();
+      _fetchNearbyIncidents();
       _alertSubscription = apiService.communityAlerts.listen((alert) {
         if (mounted) {
           setState(() {
-            _mockNearbyIncidents.insert(0, {
+            _incidents.insert(0, {
               'title': 'SOS Proximity Alert',
               'location': 'Radius ${alert['distance']}m dari posisi Anda',
               'time': 'Baru saja',
@@ -118,9 +182,7 @@ class _HomeScreenState extends State<HomeScreen>
                           child: RefreshIndicator(
                             color: const Color(0xFFFF1744),
                             backgroundColor: const Color(0xFF1E2638),
-                            onRefresh: () async {
-                              await Future.delayed(const Duration(seconds: 1));
-                            },
+                            onRefresh: _fetchNearbyIncidents,
                             child: ListView(
                               physics: const AlwaysScrollableScrollPhysics(),
                               children: [
@@ -181,9 +243,35 @@ class _HomeScreenState extends State<HomeScreen>
                                 const SizedBox(height: 24),
                                 _buildNearbyIncidentsHeader(),
                                 const SizedBox(height: 12),
-                                ..._mockNearbyIncidents.map(
-                                  (incident) => _buildIncidentCard(incident),
-                                ),
+                                if (_isLoadingIncidents)
+                                  const Center(
+                                    child: Padding(
+                                      padding: EdgeInsets.all(16.0),
+                                      child: CircularProgressIndicator(
+                                        strokeWidth: 2,
+                                        valueColor: AlwaysStoppedAnimation<Color>(
+                                          Color(0xFFFF1744),
+                                        ),
+                                      ),
+                                    ),
+                                  )
+                                else if (_incidents.isEmpty)
+                                  Padding(
+                                    padding: const EdgeInsets.symmetric(vertical: 20.0),
+                                    child: Center(
+                                      child: Text(
+                                        'Tidak ada laporan sekitar.',
+                                        style: TextStyle(
+                                          color: Colors.white.withOpacity(0.4),
+                                          fontSize: 12,
+                                        ),
+                                      ),
+                                    ),
+                                  )
+                                else
+                                  ..._incidents.map(
+                                    (incident) => _buildIncidentCard(incident),
+                                  ),
                                 const SizedBox(height: 40),
                               ],
                             ),
