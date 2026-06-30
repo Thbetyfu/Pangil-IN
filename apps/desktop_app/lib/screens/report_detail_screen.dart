@@ -50,7 +50,7 @@ class _ReportDetailScreenState extends State<ReportDetailScreen> {
         final reporter = report['reporter'] ?? {};
         final bool isSos = report['type'] == 'SOS_VOICE';
         final bool isSpoofed = report['is_spoofed'] == true;
-        final double antiSpoofScore = report['anti_spoofing_score'] ?? 1.0;
+        final double antiSpoofScore = (report['anti_spoofing_score'] as num?)?.toDouble() ?? 1.0;
         final String status = report['status'];
         final String urgency = report['urgency'];
 
@@ -90,9 +90,9 @@ class _ReportDetailScreenState extends State<ReportDetailScreen> {
         final List<Marker> reidMarkers = state.reidPredictions.map<Marker>((
           pred,
         ) {
-          final double probability = pred['reid_probability'] ?? 0.0;
-          final double lat = pred['latitude'] ?? -6.90344;
-          final double lng = pred['longitude'] ?? 107.61872;
+          final double probability = (pred['reid_probability'] as num?)?.toDouble() ?? 0.0;
+          final double lat = (pred['latitude'] as num?)?.toDouble() ?? -6.90344;
+          final double lng = (pred['longitude'] as num?)?.toDouble() ?? 107.61872;
 
           return Marker(
             point: LatLng(lat, lng),
@@ -160,15 +160,15 @@ class _ReportDetailScreenState extends State<ReportDetailScreen> {
             .toList();
 
         // Coordinates for centering mini map
-        LatLng incidentLatLng = LatLng(report['latitude'], report['longitude']);
+        LatLng incidentLatLng = LatLng((report['latitude'] as num).toDouble(), (report['longitude'] as num).toDouble());
 
         // Filter and calculate distances for available patrol units
         final patrolWithDistance = state.patrolUnits.map((unit) {
           final dist = _calculateDistance(
-            report['latitude'],
-            report['longitude'],
-            unit['latitude'],
-            unit['longitude'],
+            (report['latitude'] as num).toDouble(),
+            (report['longitude'] as num).toDouble(),
+            (unit['latitude'] as num).toDouble(),
+            (unit['longitude'] as num).toDouble(),
           );
           return {
             ...unit,
@@ -179,7 +179,7 @@ class _ReportDetailScreenState extends State<ReportDetailScreen> {
         // Sort by distance (nearest first)
         patrolWithDistance.sort(
           (a, b) =>
-              (a['distance'] as double).compareTo(b['distance'] as double),
+              (a['distance'] as num).toDouble().compareTo((b['distance'] as num).toDouble()),
         );
 
         // Get currently assigned unit if any
@@ -250,6 +250,31 @@ class _ReportDetailScreenState extends State<ReportDetailScreen> {
                       ),
                     ],
                   ),
+                  ElevatedButton.icon(
+                    style: ElevatedButton.styleFrom(
+                      backgroundColor: Colors.redAccent.withOpacity(0.12),
+                      foregroundColor: Colors.redAccent,
+                      side: BorderSide(color: Colors.redAccent.withOpacity(0.3)),
+                      shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(8),
+                      ),
+                      padding: const EdgeInsets.symmetric(
+                        horizontal: 16,
+                        vertical: 12,
+                      ),
+                    ),
+                    onPressed: () {
+                      _showDeleteConfirmationDialog(context, report['id']);
+                    },
+                    icon: const Icon(Icons.delete_outline_rounded, size: 16),
+                    label: const Text(
+                      'HAPUS LAPORAN',
+                      style: TextStyle(
+                        fontSize: 12,
+                        fontWeight: FontWeight.bold,
+                      ),
+                    ),
+                  ),
                 ],
               ),
               const SizedBox(height: 24),
@@ -307,7 +332,7 @@ class _ReportDetailScreenState extends State<ReportDetailScreen> {
                                     ),
                                   ),
                                   _buildReputationGauge(
-                                    reporter['reputation_score'] ?? 100.0,
+                                    (reporter['reputation_score'] as num?)?.toDouble() ?? 100.0,
                                   ),
                                 ],
                               ),
@@ -887,7 +912,7 @@ class _ReportDetailScreenState extends State<ReportDetailScreen> {
                                     ),
                                     items: patrolWithDistance.map((unit) {
                                       final double dist =
-                                          unit['distance'] as double;
+                                          (unit['distance'] as num).toDouble();
                                       final isAvailable =
                                           unit['status'] == 'AVAILABLE';
                                       return DropdownMenuItem<String>(
@@ -1202,6 +1227,75 @@ class _ReportDetailScreenState extends State<ReportDetailScreen> {
           ],
         ),
       ],
+    );
+  }
+
+  void _showDeleteConfirmationDialog(BuildContext context, String reportId) {
+    showDialog(
+      context: context,
+      builder: (BuildContext context) {
+        return AlertDialog(
+          backgroundColor: SigapTheme.surfaceColor,
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(12),
+            side: BorderSide(color: Colors.white.withOpacity(0.08)),
+          ),
+          title: const Row(
+            children: [
+              Icon(Icons.warning_rounded, color: Colors.redAccent, size: 22),
+              SizedBox(width: 10),
+              Text(
+                'HAPUS LAPORAN',
+                style: TextStyle(
+                  color: Colors.white,
+                  fontSize: 16,
+                  fontWeight: FontWeight.bold,
+                  letterSpacing: 0.5,
+                ),
+              ),
+            ],
+          ),
+          content: const Text(
+            'Apakah Anda yakin ingin menghapus laporan ini secara permanen dari database? Tindakan ini tidak dapat dibatalkan.',
+            style: TextStyle(color: Colors.white70, fontSize: 13, height: 1.4),
+          ),
+          actions: [
+            TextButton(
+              onPressed: () => Navigator.of(context).pop(),
+              child: Text(
+                'BATAL',
+                style: TextStyle(
+                  color: Colors.white.withOpacity(0.6),
+                  fontSize: 12,
+                  fontWeight: FontWeight.w600,
+                ),
+              ),
+            ),
+            ElevatedButton(
+              style: ElevatedButton.styleFrom(
+                backgroundColor: Colors.redAccent,
+                foregroundColor: Colors.white,
+                elevation: 0,
+                shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(6),
+                ),
+                padding: const EdgeInsets.symmetric(
+                  horizontal: 16,
+                  vertical: 10,
+                ),
+              ),
+              onPressed: () {
+                context.read<DashboardBloc>().add(DeleteReportEvent(reportId));
+                Navigator.of(context).pop();
+              },
+              child: const Text(
+                'HAPUS',
+                style: TextStyle(fontSize: 12, fontWeight: FontWeight.bold),
+              ),
+            ),
+          ],
+        );
+      },
     );
   }
 }

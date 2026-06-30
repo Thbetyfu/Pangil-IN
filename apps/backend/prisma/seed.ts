@@ -121,7 +121,7 @@ async function main() {
   // 5. Create Patrol Units
   const patrolUnits = [
     {
-      id: 'patrol-unit-1',
+      id: '4e4e9f5e-cd01-4475-8de8-a006ef1441cd',
       name: 'Patroli Sabhara Resta 901',
       latitude: -6.8850,
       longitude: 107.6180,
@@ -129,7 +129,7 @@ async function main() {
       phone: '08111222333',
     },
     {
-      id: 'patrol-unit-2',
+      id: '5f5e9f5e-cd01-4475-8de8-a006ef1442de',
       name: 'Patroli Motor Lantas 902',
       latitude: -6.8900,
       longitude: 107.6120,
@@ -137,7 +137,7 @@ async function main() {
       phone: '08111222444',
     },
     {
-      id: 'patrol-unit-3',
+      id: '6f6e9f5e-cd01-4475-8de8-a006ef1443ef',
       name: 'Tim Prabu Resmob 903',
       latitude: -6.9010,
       longitude: 107.6100,

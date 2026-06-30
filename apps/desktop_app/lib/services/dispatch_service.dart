@@ -170,6 +170,16 @@ class DispatchService {
     return jsonDecode(response.body);
   }
 
+  // Delete Report
+  Future<Map<String, dynamic>> deleteReport(String reportId) async {
+    if (_token == null) throw Exception('Not authenticated');
+    final response = await http.delete(
+      Uri.parse('$baseUrl/api/reports/$reportId'),
+      headers: {'Authorization': 'Bearer $_token'},
+    );
+    return jsonDecode(response.body);
+  }
+
   // Real-time: Connect WebSocket to Police Dispatcher Room
   void connectWebSocket() {
     if (_token == null || _userId == null) return;

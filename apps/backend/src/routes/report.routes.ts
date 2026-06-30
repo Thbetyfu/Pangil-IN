@@ -543,4 +543,38 @@ router.post(
   }
 );
 
+// 9. Delete Report (Police / Admin) - Fitur Hapus Laporan
+router.delete(
+  '/:id',
+  authenticate,
+  requireRole([Role.POLICE_OPERATOR, Role.SUPERADMIN]),
+  async (req: Request, res: Response, next: NextFunction): Promise<void> => {
+    try {
+      const { id } = req.params;
+
+      const report = await prisma.report.findUnique({
+        where: { id },
+      });
+
+      if (!report) {
+        throw new NotFoundError('Report not found');
+      }
+
+      await prisma.report.delete({
+        where: { id },
+      });
+
+      // Broadcast delete to police rooms
+      notifyDispatchers('report_deleted', { id });
+
+      res.status(200).json({
+        status: 'success',
+        message: 'Report deleted successfully',
+      });
+    } catch (error) {
+      next(error);
+    }
+  }
+);
+
 export default router;

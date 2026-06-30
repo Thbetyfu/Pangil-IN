@@ -23,6 +23,7 @@ class DashboardBloc extends Bloc<DashboardEvent, DashboardState> {
     on<LoadInitialDataEvent>(_onLoadInitialData);
     on<SelectReportEvent>(_onSelectReport);
     on<AssignPatrolUnitEvent>(_onAssignPatrolUnit);
+    on<DeleteReportEvent>(_onDeleteReport);
 
     // WebSocket / Real-time events handlers
     on<NewReportReceivedEvent>(_onNewReportReceived);
@@ -110,7 +111,10 @@ class DashboardBloc extends Bloc<DashboardEvent, DashboardState> {
       final Map<String, List<Map<String, double>>> logs = {};
       for (var r in reports) {
         logs[r['id']] = [
-          {'latitude': r['latitude'], 'longitude': r['longitude']},
+          {
+            'latitude': (r['latitude'] as num).toDouble(),
+            'longitude': (r['longitude'] as num).toDouble(),
+          },
         ];
       }
 
@@ -188,8 +192,8 @@ class DashboardBloc extends Bloc<DashboardEvent, DashboardState> {
     final String reportId = event.report['id'];
     logs[reportId] = [
       {
-        'latitude': event.report['latitude'],
-        'longitude': event.report['longitude'],
+        'latitude': (event.report['latitude'] as num).toDouble(),
+        'longitude': (event.report['longitude'] as num).toDouble(),
       },
     ];
 
@@ -201,8 +205,8 @@ class DashboardBloc extends Bloc<DashboardEvent, DashboardState> {
     Emitter<DashboardState> emit,
   ) {
     final String reportId = event.data['reportId'];
-    final double lat = event.data['latitude'];
-    final double lng = event.data['longitude'];
+    final double lat = (event.data['latitude'] as num).toDouble();
+    final double lng = (event.data['longitude'] as num).toDouble();
 
     // Update coordinates in the reports list
     final updatedReports = state.reports.map((r) {
@@ -365,5 +369,39 @@ class DashboardBloc extends Bloc<DashboardEvent, DashboardState> {
     }).toList();
 
     emit(state.copyWith(cctvCameras: updatedCameras));
+  }
+
+  Future<void> _onDeleteReport(
+    DeleteReportEvent event,
+    Emitter<DashboardState> emit,
+  ) async {
+    try {
+      final res = await dispatchService.deleteReport(event.reportId);
+      if (res['status'] == 'success') {
+        // Reload reports
+        final reports = await dispatchService.getActiveReports();
+
+        // Clear selected report if it matches deleted one
+        Map<String, dynamic>? updatedSelected = state.selectedReport;
+        if (state.selectedReport != null &&
+            state.selectedReport!['id'] == event.reportId) {
+          updatedSelected = null;
+        }
+
+        // Remove from track logs
+        final logs = Map<String, List<Map<String, double>>>.from(state.gpsTrackLogs);
+        logs.remove(event.reportId);
+
+        emit(
+          state.copyWith(
+            reports: reports,
+            selectedReport: updatedSelected,
+            gpsTrackLogs: logs,
+          ),
+        );
+      }
+    } catch (e) {
+      print('Error deleting report: $e');
+    }
   }
 }

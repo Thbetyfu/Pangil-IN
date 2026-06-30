@@ -74,3 +74,8 @@ class CctvFpsChangedReceivedEvent extends DashboardEvent {
   final Map<String, dynamic> data;
   CctvFpsChangedReceivedEvent(this.data);
 }
+
+class DeleteReportEvent extends DashboardEvent {
+  final String reportId;
+  DeleteReportEvent(this.reportId);
+}
