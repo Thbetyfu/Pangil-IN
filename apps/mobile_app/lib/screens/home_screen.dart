@@ -8,6 +8,7 @@ import '../services/api_service.dart';
 import '../bloc/sos_bloc.dart';
 import '../bloc/sos_event.dart';
 import '../bloc/sos_state.dart';
+import 'package:geolocator/geolocator.dart';
 import '../widgets/glass_card.dart';
 import '../widgets/pulsing_sos_button.dart';
 

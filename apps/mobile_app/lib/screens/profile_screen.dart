@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
+import '../services/api_service.dart';
 import '../database/local_database.dart';
 import '../widgets/glass_card.dart';
 import '../bloc/sos_bloc.dart';
@@ -267,20 +268,20 @@ class _ProfileScreenState extends State<ProfileScreen> {
                       ),
                     ),
                     const SizedBox(width: 16),
-                    const Expanded(
+                    Expanded(
                       child: Column(
                         crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
                           Text(
                             'Skor Reputasi Laporan: ${reputation.toInt()}%',
-                            style: TextStyle(
+                            style: const TextStyle(
                               color: Colors.white,
                               fontWeight: FontWeight.bold,
                               fontSize: 14,
                             ),
                           ),
-                          SizedBox(height: 2),
-                          Text(
+                          const SizedBox(height: 2),
+                          const Text(
                             'Reputasi Anda sangat baik. Laporan Anda diprioritaskan penuh oleh tim respon polisi.',
                             style: TextStyle(
                               color: Colors.white60,
