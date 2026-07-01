@@ -11,9 +11,11 @@ import authRoutes from './routes/auth.routes';
 import reportRoutes from './routes/report.routes';
 import cctvRoutes from './routes/cctv.routes';
 import patrolRoutes from './routes/patrol.routes';
+import uploadsRoutes from './routes/uploads.routes';
 import { initSocket } from './config/socket';
 import { initMqtt } from './config/mqtt';
 import { errorHandler } from './utils/errors';
+import { ensureBucketExists } from './config/minio';
 import prisma from './config/db';
 
 const app = express();
@@ -29,6 +31,7 @@ app.use('/api/auth', authRoutes);
 app.use('/api/reports', reportRoutes);
 app.use('/api/cctv', cctvRoutes);
 app.use('/api/patrol', patrolRoutes);
+app.use('/api/uploads', uploadsRoutes);
 
 // Health check endpoint
 app.get('/health', async (req, res) => {
@@ -61,6 +64,9 @@ initSocket(httpServer);
 
 // Initialize MQTT subscription listeners
 initMqtt();
+
+// Initialize MinIO bucket (non-blocking, graceful if MinIO not running)
+ensureBucketExists().catch(() => {});
 
 // Start Server
 httpServer.listen(port, () => {

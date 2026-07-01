@@ -8,16 +8,19 @@ generator client {
 }
 
 model User {
-  id               String   @id @default(uuid())
-  email            String   @unique
+  id               String    @id @default(uuid())
+  email            String    @unique
   password         String
   name             String
-  phone            String   @unique
-  role             String   @default("CITIZEN") // "CITIZEN", "POLICE_OPERATOR", "SUPERADMIN"
-  reputation_score Float    @default(100.00)
-  riding_mode      Boolean  @default(false)
-  created_at       DateTime @default(now())
-  updated_at       DateTime @updatedAt
+  phone            String    @unique
+  role             String    @default("CITIZEN") // "CITIZEN", "POLICE_OPERATOR", "SUPERADMIN"
+  reputation_score Float     @default(100.00)
+  riding_mode      Boolean   @default(false)
+  fcm_token        String?   // Firebase Cloud Messaging token for push notifications (F-02)
+  otp_code         String?   // Hashed OTP code for 2FA verification (police operators)
+  otp_expires      DateTime? // OTP expiry timestamp (5 minutes from generation)
+  created_at       DateTime  @default(now())
+  updated_at       DateTime  @updatedAt
   reports          Report[]
 
   @@map("users")

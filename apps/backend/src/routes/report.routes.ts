@@ -36,20 +36,69 @@ const assignUnitSchema = z.object({
   }),
 });
 
-// GET Heatmap Points (PRD F-07/F-03 Offline Cache)
+// GET Heatmap Points — aggregated from real verified reports (last 30 days)
+// Why: Heatmap must reflect actual crime density from the database, not static mock data.
+// We cluster reports by rounding coordinates to a 0.005-degree grid (~500m cells),
+// then calculate intensity as the count of reports per cell.
 router.get(
   '/heatmap',
   authenticate,
   async (req: Request, res: Response, next: NextFunction): Promise<void> => {
     try {
-      const heatmapPoints = [
-        { id: 'h-1', latitude: -6.8915, longitude: 107.6161, intensity: 4.5, areaName: 'Simpang Dago' },
-        { id: 'h-2', latitude: -6.8975, longitude: 107.6186, intensity: 3.2, areaName: 'Dipatiukur' },
-        { id: 'h-3', latitude: -6.8902, longitude: 107.6105, intensity: 2.8, areaName: 'Cihampelas' },
-      ];
+      const thirtyDaysAgo = new Date();
+      thirtyDaysAgo.setDate(thirtyDaysAgo.getDate() - 30);
+
+      // Fetch all non-spoofed, non-rejected reports from the last 30 days
+      const reports = await prisma.report.findMany({
+        where: {
+          is_spoofed: false,
+          status: { notIn: ['REJECTED'] },
+          created_at: { gte: thirtyDaysAgo },
+        },
+        select: { id: true, latitude: true, longitude: true },
+      });
+
+      // Cluster reports into ~500m grid cells by rounding coordinates
+      const GRID_PRECISION = 0.005; // ~500m per cell
+      const clusterMap = new Map<string, { lat: number; lng: number; count: number }>();
+
+      for (const report of reports) {
+        const gridLat = Math.round(report.latitude / GRID_PRECISION) * GRID_PRECISION;
+        const gridLng = Math.round(report.longitude / GRID_PRECISION) * GRID_PRECISION;
+        const key = `${gridLat.toFixed(4)},${gridLng.toFixed(4)}`;
+
+        if (clusterMap.has(key)) {
+          clusterMap.get(key)!.count++;
+        } else {
+          clusterMap.set(key, { lat: gridLat, lng: gridLng, count: 1 });
+        }
+      }
+
+      // Convert clusters to heatmap points with intensity score
+      const heatmapPoints = Array.from(clusterMap.entries()).map(([key, cluster], idx) => ({
+        id: `heatmap-cluster-${idx}`,
+        latitude: cluster.lat,
+        longitude: cluster.lng,
+        intensity: Math.min(cluster.count * 1.5, 10.0), // Scale: 1 report = 1.5 intensity, max 10
+        areaName: `Zona ${idx + 1} (${cluster.count} laporan)`,
+      }));
+
+      // If no real data yet (fresh install / empty DB), fall back to seeded reference points
+      const fallbackPoints = heatmapPoints.length === 0
+        ? [
+            { id: 'h-fallback-1', latitude: -6.8915, longitude: 107.6161, intensity: 2.0, areaName: 'Simpang Dago (Referensi)' },
+            { id: 'h-fallback-2', latitude: -6.8975, longitude: 107.6186, intensity: 1.5, areaName: 'Dipatiukur (Referensi)' },
+            { id: 'h-fallback-3', latitude: -6.8902, longitude: 107.6105, intensity: 1.2, areaName: 'Cihampelas (Referensi)' },
+          ]
+        : heatmapPoints;
+
       res.status(200).json({
         status: 'success',
-        data: { points: heatmapPoints },
+        data: {
+          points: fallbackPoints,
+          total_reports_analyzed: reports.length,
+          generated_at: new Date().toISOString(),
+        },
       });
     } catch (error) {
       next(error);
@@ -166,7 +215,10 @@ router.post(
 
       // B. Trigger Proximity Alerts (Community Alert) if valid (not spoofed)
       if (!finalIsSpoofed) {
-        notifyNearbyCitizens(latitude, longitude, 500, reporterId);
+        // Fire-and-forget: don't await to avoid blocking the HTTP response
+        notifyNearbyCitizens(latitude, longitude, 500, reporterId).catch((err) =>
+          console.error('[Report] Community alert failed:', err)
+        );
       }
 
       res.status(201).json({

@@ -14,7 +14,7 @@ Dokumen ini mendefinisikan persyaratan fungsional dan non-fungsional untuk proye
   * **Database & ORM:** PostgreSQL dengan Prisma ORM untuk relasi data terstruktur, dan Redis untuk caching data pelacakan GPS *in-memory* dan rate-limiting.
   * **Sistem Penyimpanan Media:** Object Storage (seperti MinIO atau AWS S3) untuk berkas foto dan rekaman video alert.
   * **Sistem Komunikasi Cadangan:** SMS Gateway API (untuk mengirim Stealth SMS Ping).
-  * **Autentikasi:** JWT (JSON Web Token) dengan enkripsi SHA-256 yang disimpan secara aman di *Secure Storage* perangkat (klien Mobile) dan penyimpanan terenkripsi lokal (klien Desktop), diamankan dengan autentikasi dua faktor (2FA) OTP via Email/SMS khusus untuk petugas.
+  * **Autentikasi:** JWT (JSON Web Token) dengan enkripsi SHA-256 yang disimpan secara aman di *Secure Storage* perangkat (klien Mobile) dan penyimpanan terenkripsi lokal (klien Desktop). Untuk efisiensi biaya SMS Gateway nasional, warga (Citizen) melakukan login langsung tanpa OTP (serta dapat divalidasi via OAuth/Email), sedangkan petugas kepolisian (Police Operator & Superadmin) wajib diamankan dengan autentikasi dua faktor (2FA) OTP via Email/SMS.
 * **Arsitektur & Standar Kode:** Clean Architecture, SOLID Principles, ESLint Strict Mode untuk Backend, Dart Linter Strict Rules untuk Flutter Mobile/Desktop, Monorepo Project Structure untuk berbagi model data (*shared domain entities*) dan pustaka API client (*shared SDK*) antara Mobile dan Desktop.
 * **Peran AI (AI Persona Prompts):**
   * Bertindaklah sebagai Senior Full-Stack Developer, Software Architect, dan QA Engineer berpengalaman. Semua respons, struktur kode, skema database, dan pengujian yang Anda hasilkan nanti harus mematuhi batasan teknologi dan standar yang didefinisikan dalam dokumen ini tanpa pengecualian.
@@ -334,9 +334,10 @@ Merepresentasikan pos kepolisian atau unit mobil/motor patroli lapangan yang ber
 * **Offline Cache & Database Lokal:**
   * Aplikasi *mobile* warga menyimpan data heatmap rawan begal, riwayat laporan, dan daftar kontak darurat secara lokal menggunakan **SQLite dengan Drift ORM**.
   * Sinkronisasi data cache dilakukan di latar belakang saat mendeteksi koneksi Wi-Fi atau internet seluler yang stabil dan tidak mengganggu aktivitas kritis pelacakan.
-* **Autentikasi Petugas Kepolisian:**
-  * Aplikasi desktop SIGap diamankan menggunakan token **JWT** berdurasi sesi maksimal **12 jam** (untuk meminimalkan penyalahgunaan pada terminal komando yang tidak dijaga).
-  * Proses masuk (*login*) petugas diamankan dengan lapisan keamanan kedua berupa **Autentikasi Dua Faktor (2FA) OTP** yang dikirimkan via SMS atau Email terdaftar.
+* **Autentikasi Petugas Kepolisian & Warga:**
+  * Aplikasi desktop SIGAP diamankan menggunakan token **JWT** berdurasi sesi maksimal **12 jam** (untuk meminimalkan penyalahgunaan pada terminal komando yang tidak dijaga).
+  * Proses masuk (*login*) petugas kepolisian wajib diamankan dengan lapisan keamanan kedua berupa **Autentikasi Dua Faktor (2FA) OTP** yang dikirimkan via SMS atau Email terdaftar.
+  * Warga (Citizen) dibebaskan dari 2FA OTP dan langsung login menggunakan kombinasi email/password (atau OAuth pihak ketiga) demi meminimalkan biaya SMS Gateway di skala nasional.
 * **Kepatuhan Privasi (UU PDP):** 
   Data pribadi pelapor (nama, nomor telepon, koordinat rumah) wajib disembunyikan dalam representasi data peta publik. Berkas suara SOS wajib dienkripsi saat disimpan di cloud storage dan dihapus otomatis dari server dalam waktu 90 hari setelah status laporan diselesaikan.
 

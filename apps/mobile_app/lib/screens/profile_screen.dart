@@ -16,24 +16,33 @@ class ProfileScreen extends StatefulWidget {
 }
 
 class _ProfileScreenState extends State<ProfileScreen> {
-  // Mock citizen reports history
-  final List<Map<String, dynamic>> _myReports = [
-    {
-      'date': '2026-06-25 21:30',
-      'type': 'SOS Begal',
-      'status': 'RESOLVED',
-      'location': 'Simpang Dago',
-    },
-    {
-      'date': '2026-05-18 19:15',
-      'type': 'Laporan Visual',
-      'status': 'VALIDATED',
-      'location': 'Jl. Dipatiukur',
-    },
-  ];
+  // Reports history is now fetched from the API, not hardcoded.
+  // We use a late Future so the fetch starts once in initState and
+  // FutureBuilder can rebuild on completion without re-triggering.
+  late Future<List<Map<String, dynamic>>> _myReportsFuture;
 
   final _contactNameController = TextEditingController();
   final _contactPhoneController = TextEditingController();
+
+  @override
+  void initState() {
+    super.initState();
+    _myReportsFuture = _fetchMyReports();
+  }
+
+  Future<List<Map<String, dynamic>>> _fetchMyReports() async {
+    try {
+      final apiService = context.read<ApiService>();
+      final result = await apiService.getMyReports();
+      if (result['status'] == 'success') {
+        final List<dynamic> reports = result['data']['reports'] ?? [];
+        return List<Map<String, dynamic>>.from(reports);
+      }
+      return [];
+    } catch (e) {
+      return [];
+    }
+  }
 
   @override
   void dispose() {
@@ -348,8 +357,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
                             'Ketuk layar hitam secara cepat sebanyak 2 kali',
                             style: TextStyle(
                               color: Colors.white60,
-                              fontSize: 11,
-                            ),
+      23                     ),
                           ),
                           value: 'double_tap',
                           groupValue: state.fakeShutdownMethod,
@@ -484,7 +492,40 @@ class _ProfileScreenState extends State<ProfileScreen> {
                 Icons.history_rounded,
               ),
               const SizedBox(height: 10),
-              ..._myReports.map((report) => _buildReportCard(report)),
+              FutureBuilder<List<Map<String, dynamic>>>(
+                future: _myReportsFuture,
+                builder: (context, snapshot) {
+                  if (snapshot.connectionState == ConnectionState.waiting) {
+                    return const Center(
+                      child: Padding(
+                        padding: EdgeInsets.all(16.0),
+                        child: CircularProgressIndicator(
+                          strokeWidth: 2,
+                          valueColor: AlwaysStoppedAnimation<Color>(Color(0xFFFF1744)),
+                        ),
+                      ),
+                    );
+                  }
+
+                  final reports = snapshot.data ?? [];
+                  if (reports.isEmpty) {
+                    return Padding(
+                      padding: const EdgeInsets.symmetric(vertical: 12.0),
+                      child: Text(
+                        'Belum ada riwayat laporan.',
+                        style: TextStyle(
+                          color: Colors.white.withValues(alpha: 0.4),
+                          fontSize: 12,
+                        ),
+                      ),
+                    );
+                  }
+
+                  return Column(
+                    children: reports.map((report) => _buildReportCard(_mapApiReport(report))).toList(),
+                  );
+                },
+              ),
               const SizedBox(height: 40),
             ],
           ),
@@ -573,6 +614,40 @@ class _ProfileScreenState extends State<ProfileScreen> {
         ),
       ),
     );
+  }
+
+  /// Maps raw API report data to the display format used by [_buildReportCard].
+  Map<String, dynamic> _mapApiReport(Map<String, dynamic> apiReport) {
+    final String type = apiReport['type'] ?? 'VISUAL_REPORT';
+    final String typeLabel = type == 'SOS_VOICE' ? 'SOS Begal' : 'Laporan Visual';
+
+    // Format created_at timestamp to readable date string
+    String dateStr = '';
+    try {
+      final raw = apiReport['created_at'] ?? apiReport['createdAt'];
+      if (raw != null) {
+        final dt = DateTime.parse(raw.toString()).toLocal();
+        dateStr =
+            '${dt.year}-${dt.month.toString().padLeft(2, '0')}-${dt.day.toString().padLeft(2, '0')} '
+            '${dt.hour.toString().padLeft(2, '0')}:${dt.minute.toString().padLeft(2, '0')}';
+      }
+    } catch (_) {}
+
+    // Use description as location hint if available, otherwise use lat/lng
+    final String location = (apiReport['description'] != null &&
+            apiReport['description'].toString().isNotEmpty)
+        ? apiReport['description'].toString().length > 40
+            ? '${apiReport['description'].toString().substring(0, 40)}...'
+            : apiReport['description'].toString()
+        : 'Lat: ${apiReport['latitude']?.toStringAsFixed(4)}, Lng: ${apiReport['longitude']?.toStringAsFixed(4)}';
+
+    return {
+      'date': dateStr,
+      'type': typeLabel,
+      'status': apiReport['status'] ?? 'PENDING',
+      'location': location,
+      'urgency': apiReport['urgency'] ?? 'MEDIUM',
+    };
   }
 
   Widget _buildReportCard(Map<String, dynamic> report) {

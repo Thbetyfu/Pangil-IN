@@ -390,6 +390,133 @@ class ApiService {
     }
   }
 
+  // Profile: Get reports belonging to the authenticated citizen (for profile history screen)
+  // Why: Profile screen was using hardcoded mock data. This fetches real data from the backend.
+  Future<Map<String, dynamic>> getMyReports() async {
+    if (_token == null) return {'status': 'success', 'data': {'reports': []}};
+
+    try {
+      final response = await http.get(
+        Uri.parse('$baseUrl/api/reports'),
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': 'Bearer $_token',
+        },
+      ).timeout(const Duration(seconds: 8));
+      final data = jsonDecode(response.body);
+      if (data['status'] == 'success') {
+        return data;
+      }
+      return {'status': 'success', 'data': {'reports': []}};
+    } catch (e) {
+      // Offline fallback: read from local SQLite cache
+      try {
+        final cachedList = await database.getAllReports();
+        final reportsJson = cachedList
+            .map((r) => {
+                  'id': r.id,
+                  'type': r.type,
+                  'latitude': r.latitude,
+                  'longitude': r.longitude,
+                  'description': r.description,
+                  'status': r.status,
+                  'urgency': r.urgency,
+                  'created_at': r.createdAt,
+                })
+            .toList();
+        return {'status': 'success', 'data': {'reports': reportsJson}};
+      } catch (_) {
+        return {'status': 'success', 'data': {'reports': []}};
+      }
+    }
+  }
+
+  // Upload: Send an image file to MinIO via backend upload endpoint
+  Future<String?> uploadImage(List<int> fileBytes, String filename) async {
+    if (_token == null) return null;
+
+    try {
+      final request = http.MultipartRequest(
+        'POST',
+        Uri.parse('$baseUrl/api/uploads/image'),
+      );
+      request.headers['Authorization'] = 'Bearer $_token';
+      request.files.add(http.MultipartFile.fromBytes(
+        'file',
+        fileBytes,
+        filename: filename,
+      ));
+
+      final streamedResponse = await request.send().timeout(const Duration(seconds: 30));
+      final response = await http.Response.fromStream(streamedResponse);
+      final data = jsonDecode(response.body);
+
+      if (data['status'] == 'success') {
+        return data['data']['url'] as String?;
+      }
+      return null;
+    } catch (e) {
+      print('Image upload failed: $e');
+      return null;
+    }
+  }
+
+  // FCM: Save Firebase Cloud Messaging device token to backend (PRD F-02 community alert)
+  Future<void> saveFcmToken(String token) async {
+    if (_token == null) return;
+    try {
+      await http.post(
+        Uri.parse('$baseUrl/api/auth/fcm-token'),
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': 'Bearer $_token',
+        },
+        body: jsonEncode({'fcm_token': token}),
+      ).timeout(const Duration(seconds: 5));
+      print('[FCM] Token saved to backend successfully');
+    } catch (e) {
+      print('[FCM] Failed to save token: $e');
+    }
+  }
+
+  // 2FA OTP: Request OTP to be sent to email/SMS (for police operator login)
+  Future<Map<String, dynamic>> sendOtp(String email) async {
+    try {
+      final response = await http.post(
+        Uri.parse('$baseUrl/api/auth/otp/send'),
+        headers: {'Content-Type': 'application/json'},
+        body: jsonEncode({'email': email}),
+      ).timeout(const Duration(seconds: 10));
+      return jsonDecode(response.body);
+    } catch (e) {
+      return {'status': 'error', 'message': 'Gagal mengirim OTP: $e'};
+    }
+  }
+
+  // 2FA OTP: Verify submitted OTP code and get JWT if valid
+  Future<Map<String, dynamic>> verifyOtp(String email, String code) async {
+    try {
+      final response = await http.post(
+        Uri.parse('$baseUrl/api/auth/otp/verify'),
+        headers: {'Content-Type': 'application/json'},
+        body: jsonEncode({'email': email, 'code': code}),
+      ).timeout(const Duration(seconds: 10));
+      final data = jsonDecode(response.body);
+      if (response.statusCode == 200 && data['status'] == 'success') {
+        // Store token from 2FA verified session
+        _token = data['data']['token'];
+        _userId = data['data']['user']['id'];
+        _userName = data['data']['user']['name'];
+        _userEmail = data['data']['user']['email'];
+        _userPhone = data['data']['user']['phone'];
+        _reputationScore = (data['data']['user']['reputation_score'] as num?)?.toDouble() ?? 100.0;
+      }
+      return data;
+    } catch (e) {
+      return {'status': 'error', 'message': 'Gagal verifikasi OTP: $e'};
+    }
+  }
+
   void dispose() {
     _socket?.disconnect();
     _socket?.dispose();
